@@ -45,8 +45,11 @@ def main():
     
     image_folder = settings['images']['folder_name'] + os.sep
     sound_folder = settings['sound']['folder_name'] + os.sep
-    
+
     pygame.init()
+    
+    font = pygame.font.SysFont("comicsansms", 12)
+    
     
     size = width, height = (int(settings['graphics']['width']), int(settings['graphics']['height'])) 
     speed = [0, 0]
@@ -67,7 +70,11 @@ def main():
     
     game_clock = pygame.time.Clock()
     
+    
     elapsed_time = 0
+    
+    score_timer = font.render(str(int(elapsed_time / 1000)), True, (255, 255, 255))
+    
     bad_cube_list = []
     
     base_bad_cube_speed = 1
@@ -78,6 +85,9 @@ def main():
     spawn_buffer = 15
     while True:       
         bad_cube_counter += 1
+        
+        if bad_cube_counter % seconds_to_frames(frame_rate, 1) == 0:
+            score_timer = font.render(str(int(elapsed_time / 1000)), True, (255, 255, 255))
         
         #Creates bad cubes
         if bad_cube_counter % seconds_to_frames(frame_rate, 0.3) == 0:
@@ -172,7 +182,7 @@ def main():
         
         #Keeps good cube on screen
         good_cube.rect = keep_on_screen(good_cube.rect, width, height)
-        
+
         screen.fill(black)
         
         for bad_cube in bad_cube_list:
@@ -180,9 +190,10 @@ def main():
             bad_cube.rect = keep_on_screen(bad_cube.rect, width, height)
             
             screen.blit(bad_cube.surface, bad_cube.rect)
-            
+        
         screen.blit(good_cube.surface, good_cube.rect)
         
+        screen.blit(score_timer, (width-15,height-20))
         
         pygame.display.flip()
         
