@@ -26,7 +26,7 @@ def main():
     
     pygame.init()
 
-    size = width, height = (400, 400) 
+    size = width, height = (650, 400) 
     speed = [0, 0]
     black = (0, 0, 0)
     
@@ -49,7 +49,7 @@ def main():
             
             while not is_done:
                 (red_cube, red_cube_rect) = load_image(image_folder + 'red_cube.bmp' )
-                red_cube_rect = red_cube_rect.move(random.randint(0, width), random.randint(0, height) )
+                red_cube_rect = red_cube_rect.move(random.randint(0, width - 20), random.randint(0, height - 20) )
                 
                 #Prevents red cube from spawning directly on white cube
                 if not white_cube_rect.colliderect(red_cube_rect):
@@ -72,7 +72,7 @@ def main():
         
         #Detects loss condition
         if len(red_cube_list) >= 1 and white_cube_rect.collidelist(red_cube_rect_list) > 0:
-            print("You lose!")
+            print("You survived: " + str(pygame.time.get_ticks()/1000 - 2) + " seconds")
             sys.exit()
         
         
