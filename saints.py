@@ -22,6 +22,18 @@ import random
 import configparser
 
 def main():
+    
+    def play_loss_sound():
+        pygame.mixer.music.stop()
+        
+        loss_tone = pygame.mixer.Sound(sound_folder + settings['sound']['loss_tone'])
+        loss_tone.play()
+        
+        pygame.time.wait(int(loss_tone.get_length() * 1000))
+        
+        pygame.mixer.music.rewind()
+        pygame.mixer.music.play(-1)
+    
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
         
     settings = configparser.ConfigParser()
@@ -103,21 +115,13 @@ def main():
         
         #Detects loss condition
         if len(bad_cube_list) >= 1 and good_cube_rect.collidelist(bad_cube_rect_list) > 0:
-            pygame.mixer.music.stop()
-            
-            loss_tone = pygame.mixer.Sound(sound_folder + settings['sound']['loss_tone'])
-            loss_tone.play()
-            
+            play_loss_sound()
+                   
             bad_cube_list = []
             bad_cube_rect_list = []
             bad_cube_speed_list = []
             elapsed_time = 0
             current_bad_cube_speed = 0
-            
-            pygame.time.wait(int(loss_tone.get_length() * 1000))
-            
-            pygame.mixer.music.rewind()
-            pygame.mixer.music.play(-1)
         
         
         for event in pygame.event.get():
@@ -131,21 +135,13 @@ def main():
                 
             #Restarts the game
             if pressed_keys[pygame.K_SPACE]:
-                pygame.mixer.music.stop()
-                
-                loss_tone = pygame.mixer.Sound(sound_folder + settings['sound']['loss_tone'])
-                loss_tone.play()
+                play_loss_sound()
                 
                 bad_cube_list = []
                 bad_cube_rect_list = []
                 bad_cube_speed_list = []
                 elapsed_time = 0
                 current_bad_cube_speed = 0
-                
-                pygame.time.wait(int(loss_tone.get_length() * 1000))
-                
-                pygame.mixer.music.rewind()
-                pygame.mixer.music.play(-1)
             
             #Controls movement
             if pressed_keys[pygame.K_LEFT] and pressed_keys[pygame.K_UP]:
