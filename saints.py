@@ -19,23 +19,29 @@ import sys
 import os
 import logging
 import random
+import configparser
 
 def main():
-
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
+        
+    settings = configparser.ConfigParser()
+    settings.read('config' + os.sep + 'settings.ini')
     
     pygame.init()
 
-    size = width, height = (650, 400) 
+    size = width, height = (int(settings['graphics']['width']), int(settings['graphics']['height'])) 
     speed = [0, 0]
     black = (0, 0, 0)
-    frame_rate = 60
+    frame_rate = int(settings['graphics']['frame_rate'])
     
     screen = pygame.display.set_mode(size)
     
-    image_folder = "images" + os.sep
+    image_folder = settings['images']['folder_name'] + os.sep
     
-    (white_cube, white_cube_rect) = load_image(image_folder + "white_cube.bmp")
+    (white_cube, white_cube_rect) = load_image(image_folder + settings['images']['good_cube'])
+    
+    #Move white cube to middle of screen
+    white_cube_rect = white_cube_rect.move(width//2, height//2)
     
     game_clock = pygame.time.Clock()
     
@@ -54,7 +60,7 @@ def main():
             is_done = False
             
             while not is_done:
-                (red_cube, red_cube_rect) = load_image(image_folder + 'red_cube.bmp' )
+                (red_cube, red_cube_rect) = load_image(image_folder + settings['images']['bad_cube'] )
                 red_cube_rect = red_cube_rect.move(random.randint(20, width - 20), random.randint(20, height - 20) )
                 
                 #Prevents red cube from spawning around the white cube
@@ -107,6 +113,7 @@ def main():
                 red_cube_rect_list = []
                 red_cube_speed_list = []
                 elapsed_time = 0
+                current_red_cube_speed = 0
             
             #Controls movement
             if pressed_keys[pygame.K_LEFT] and pressed_keys[pygame.K_UP]:
