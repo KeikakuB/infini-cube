@@ -21,7 +21,7 @@ import logging
 import random
 
 def main():
-    
+
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
     
     pygame.init()
@@ -39,16 +39,22 @@ def main():
     red_cube_list = []
     red_cube_rect_list = []
     red_cube_counter = 0
-    while True:
-        
+    while True:       
         red_cube_counter += 1
         
         #Creates red cubes
         if red_cube_counter % 50 == 0:
-            (red_cube, red_cube_rect) = load_image(image_folder + 'red_cube.bmp' )
-            red_cube_rect = red_cube_rect.move(random.randint(0, width), random.randint(0, height) )
-            red_cube_list.append(red_cube)
-            red_cube_rect_list.append(red_cube_rect)
+            is_done = False
+            
+            while not is_done:
+                (red_cube, red_cube_rect) = load_image(image_folder + 'red_cube.bmp' )
+                red_cube_rect = red_cube_rect.move(random.randint(0, width), random.randint(0, height) )
+                
+                #Prevents red cube from spawning directly on white cube
+                if not white_cube_rect.colliderect(red_cube_rect):
+                    red_cube_list.append(red_cube)
+                    red_cube_rect_list.append(red_cube_rect)
+                    is_done = True
         
         #Deletes red cubes
         if red_cube_counter % 100 == 0:
@@ -68,6 +74,12 @@ def main():
             
             pressed_keys = pygame.key.get_pressed()
             
+            #Restarts the game
+            if pressed_keys[pygame.K_SPACE]:
+                red_cube_list = []
+                red_cube_rect_list = []
+            
+            #Controls movement
             if pressed_keys[pygame.K_LEFT] and pressed_keys[pygame.K_UP]:
                 move_left(speed)
                 move_up(speed)
