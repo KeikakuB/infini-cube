@@ -57,8 +57,8 @@ def main():
                 (red_cube, red_cube_rect) = load_image(image_folder + 'red_cube.bmp' )
                 red_cube_rect = red_cube_rect.move(random.randint(20, width - 20), random.randint(20, height - 20) )
                 
-                #Prevents red cube from spawning directly on white cube
-                if not white_cube_rect.colliderect(red_cube_rect):
+                #Prevents red cube from spawning around the white cube
+                if not white_cube_rect.inflate(100, 100).colliderect(red_cube_rect):
                     red_cube_list.append(red_cube)
                     red_cube_rect_list.append(red_cube_rect)
                     
