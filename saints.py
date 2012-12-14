@@ -27,16 +27,22 @@ def main():
     settings = configparser.ConfigParser()
     settings.read('config' + os.sep + 'settings.ini')
     
+    image_folder = settings['images']['folder_name'] + os.sep
+    sound_folder = settings['sound']['folder_name'] + os.sep
+    
     pygame.init()
-
+    
     size = width, height = (int(settings['graphics']['width']), int(settings['graphics']['height'])) 
     speed = [0, 0]
     black = (0, 0, 0)
     frame_rate = int(settings['graphics']['frame_rate'])
     
-    screen = pygame.display.set_mode(size)
+    pygame.mixer.music.load(sound_folder + settings['sound']['theme'])
+    pygame.mixer.music.set_volume(float(settings['sound']['volume']))
     
-    image_folder = settings['images']['folder_name'] + os.sep
+    pygame.mixer.music.play(loops=-1)
+    
+    screen = pygame.display.set_mode(size)
     
     (good_cube, good_cube_rect) = load_image(image_folder + settings['images']['good_cube'])
     
@@ -97,8 +103,21 @@ def main():
         
         #Detects loss condition
         if len(bad_cube_list) >= 1 and good_cube_rect.collidelist(bad_cube_rect_list) > 0:
-            print("You survived: " + str(elapsed_time/1000) + " seconds")
-            sys.exit()
+            pygame.mixer.music.stop()
+            
+            loss_tone = pygame.mixer.Sound(sound_folder + settings['sound']['loss_tone'])
+            loss_tone.play()
+            
+            bad_cube_list = []
+            bad_cube_rect_list = []
+            bad_cube_speed_list = []
+            elapsed_time = 0
+            current_bad_cube_speed = 0
+            
+            pygame.time.wait(2000)
+            
+            pygame.mixer.music.rewind()
+            pygame.mixer.music.play(-1)
         
         
         for event in pygame.event.get():
@@ -107,13 +126,26 @@ def main():
             
             pressed_keys = pygame.key.get_pressed()
             
+            if pressed_keys[pygame.K_ESCAPE]:
+                sys.exit()
+                
             #Restarts the game
             if pressed_keys[pygame.K_SPACE]:
+                pygame.mixer.music.stop()
+                
+                loss_tone = pygame.mixer.Sound(sound_folder + settings['sound']['loss_tone'])
+                loss_tone.play()
+                
                 bad_cube_list = []
                 bad_cube_rect_list = []
                 bad_cube_speed_list = []
                 elapsed_time = 0
                 current_bad_cube_speed = 0
+                
+                pygame.time.wait(2000)
+                
+                pygame.mixer.music.rewind()
+                pygame.mixer.music.play(-1)
             
             #Controls movement
             if pressed_keys[pygame.K_LEFT] and pressed_keys[pygame.K_UP]:
