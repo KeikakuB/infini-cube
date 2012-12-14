@@ -69,42 +69,41 @@ def main():
     elapsed_time = 0
     bad_cube_list = []
     
-    current_bad_cube_speed = 0
+    base_bad_cube_speed = 1
+    current_bad_cube_speed = base_bad_cube_speed
+    
     bad_cube_counter = 0
+    
+    spawn_buffer = 15
     while True:       
         bad_cube_counter += 1
         
         #Creates bad cubes
         if bad_cube_counter % seconds_to_frames(frame_rate, 0.3) == 0:
-            is_done = False
+            bad_cube = Cube(image_folder + settings['images']['bad_cube'] )
             
-            while not is_done:
-                bad_cube = Cube(image_folder + settings['images']['bad_cube'] )
-                bad_cube.rect = bad_cube.rect.move(random.randint(20, width - 20), random.randint(20, height - 20) )
-                
-                #Prevents bad cube from spawning around the good cube
-                if not good_cube.rect.inflate(100, 100).colliderect(bad_cube.rect):
-                    #Gets speed for new bad cube
-                    if random.randint(0, 1) == 0:
-                        if random.randint(0, 1) == 0:
-                            new_speed = [0, current_bad_cube_speed]
-                        else:
-                            new_speed = [0, -current_bad_cube_speed]
-                    else:
-                        if random.randint(0, 1) == 0:
-                            new_speed = [current_bad_cube_speed, 0]
-                        else:
-                            new_speed = [-current_bad_cube_speed, 0]
+            spawn_zone = random.randint(0, 3)
+            
+            #Left-Right
+            if spawn_zone == 0 or spawn_zone == 1:
+                if spawn_zone == 0:
+                    bad_cube.rect = bad_cube.rect.move(spawn_buffer, random.randint(spawn_buffer, height - spawn_buffer) )
+                    new_speed = [current_bad_cube_speed, 0]
+                elif spawn_zone == 1:
+                    bad_cube.rect = bad_cube.rect.move(width - spawn_buffer, random.randint(spawn_buffer, height - spawn_buffer) )
+                    new_speed = [-current_bad_cube_speed, 0]
+            
+            #Top-Bottom
+            if spawn_zone == 2 or spawn_zone == 3:
+                if spawn_zone == 2:
+                    bad_cube.rect = bad_cube.rect.move(random.randint(spawn_buffer, width - spawn_buffer), spawn_buffer)
+                    new_speed = [0, current_bad_cube_speed]
+                elif spawn_zone == 3:
+                    bad_cube.rect = bad_cube.rect.move(random.randint(spawn_buffer, width - spawn_buffer), height - spawn_buffer)
+                    new_speed = [0, -current_bad_cube_speed]
                     
-                    bad_cube.speed = new_speed
-                    bad_cube_list.append(bad_cube)
-                    
-                    is_done = True
-        
-        #Deletes bad cubes
-        if bad_cube_counter % seconds_to_frames(frame_rate, 0.6) == 0:
-            rand_index = random.randint(0, len(bad_cube_list) - 1)
-            del bad_cube_list[rand_index]
+            bad_cube.speed = new_speed
+            bad_cube_list.append(bad_cube)
         
         if bad_cube_counter % seconds_to_frames(frame_rate, 10) == 0:
             current_bad_cube_speed += 1
@@ -115,7 +114,7 @@ def main():
                    
             bad_cube_list = []
             elapsed_time = 0
-            current_bad_cube_speed = 0
+            current_bad_cube_speed = base_bad_cube_speed
         
         
         for event in pygame.event.get():
@@ -133,7 +132,7 @@ def main():
                 
                 bad_cube_list = []
                 elapsed_time = 0
-                current_bad_cube_speed = 0
+                current_bad_cube_speed = base_bad_cube_speed
             
             #Controls movement
             if pressed_keys[pygame.K_LEFT] and pressed_keys[pygame.K_UP]:
