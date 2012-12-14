@@ -30,6 +30,7 @@ def main():
         pygame.mixer.music.stop()
         
         loss_tone = pygame.mixer.Sound(sound_folder + settings['sound']['loss_tone'])
+        loss_tone.set_volume(float(settings['sound']['volume']))
         loss_tone.play()
         
         pygame.time.wait(int(loss_tone.get_length() * 1000))
