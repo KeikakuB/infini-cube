@@ -29,6 +29,7 @@ def main():
     size = width, height = (650, 400) 
     speed = [0, 0]
     black = (0, 0, 0)
+    frame_rate = 60
     
     screen = pygame.display.set_mode(size)
     
@@ -41,12 +42,14 @@ def main():
     red_cube_list = []
     red_cube_rect_list = []
     red_cube_speed_list = []
+    
+    current_red_cube_speed = 0
     red_cube_counter = 0
     while True:       
         red_cube_counter += 1
         
         #Creates red cubes
-        if red_cube_counter % 30 == 0:
+        if red_cube_counter % seconds_to_frames(frame_rate, 0.3) == 0:
             is_done = False
             
             while not is_done:
@@ -58,19 +61,32 @@ def main():
                     red_cube_list.append(red_cube)
                     red_cube_rect_list.append(red_cube_rect)
                     
+                    
+                    #Gets speed for new red cube
                     if random.randint(0, 1) == 0:
-                        red_cube_speed_list.append([0, random.randint(-2, 2)])
+                        if random.randint(0, 1) == 0:
+                            new_speed = [0, current_red_cube_speed]
+                        else:
+                            new_speed = [0, -current_red_cube_speed]
                     else:
-                        red_cube_speed_list.append([random.randint(-2, 2), 0])
+                        if random.randint(0, 1) == 0:
+                            new_speed = [current_red_cube_speed, 0]
+                        else:
+                            new_speed = [-current_red_cube_speed, 0]
+                        
+                    red_cube_speed_list.append(new_speed)
                     
                     is_done = True
         
         #Deletes red cubes
-        if red_cube_counter % 70 == 0:
+        if red_cube_counter % seconds_to_frames(frame_rate, 0.6) == 0:
             rand_index = random.randint(0, len(red_cube_list) - 1)
             del red_cube_list[rand_index]
             del red_cube_rect_list[rand_index]
             del red_cube_speed_list[rand_index]
+        
+        if red_cube_counter % seconds_to_frames(frame_rate, 10) == 0:
+            current_red_cube_speed += 1
         
         #Detects loss condition
         if len(red_cube_list) >= 1 and white_cube_rect.collidelist(red_cube_rect_list) > 0:
@@ -141,13 +157,16 @@ def main():
         
         pygame.display.flip()
         
-        game_clock.tick(60)
+        game_clock.tick(frame_rate)
 
 def load_image(filename):
     image = pygame.image.load(filename).convert()
     imagerect = image.get_rect()
     
     return (image, imagerect)
+
+def seconds_to_frames(frame_rate, number_of_seconds):
+    return int(number_of_seconds * frame_rate)
 
 def move_up(speed):
     speed[1] = -4
