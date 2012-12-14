@@ -38,12 +38,13 @@ def main():
     
     red_cube_list = []
     red_cube_rect_list = []
+    red_cube_speed_list = []
     red_cube_counter = 0
     while True:       
         red_cube_counter += 1
         
         #Creates red cubes
-        if red_cube_counter % 50 == 0:
+        if red_cube_counter % 100 == 0:
             is_done = False
             
             while not is_done:
@@ -54,13 +55,20 @@ def main():
                 if not white_cube_rect.colliderect(red_cube_rect):
                     red_cube_list.append(red_cube)
                     red_cube_rect_list.append(red_cube_rect)
+                    
+                    if random.randint(0, 1) == 0:
+                        red_cube_speed_list.append([0, random.randint(-1, 1)])
+                    else:
+                        red_cube_speed_list.append([random.randint(-1, 1), 0])
+                    
                     is_done = True
         
         #Deletes red cubes
-        if red_cube_counter % 100 == 0:
+        if red_cube_counter % 200 == 0:
             rand_index = random.randint(0, len(red_cube_list) - 1)
             del red_cube_list[rand_index]
             del red_cube_rect_list[rand_index]
+            del red_cube_speed_list[rand_index]
         
         #Detects loss condition
         if len(red_cube_list) >= 1 and white_cube_rect.collidelist(red_cube_rect_list) > 0:
@@ -78,6 +86,7 @@ def main():
             if pressed_keys[pygame.K_SPACE]:
                 red_cube_list = []
                 red_cube_rect_list = []
+                red_cube_speed_list = []
             
             #Controls movement
             if pressed_keys[pygame.K_LEFT] and pressed_keys[pygame.K_UP]:
@@ -114,22 +123,16 @@ def main():
         
         white_cube_rect = white_cube_rect.move(speed)
         
-        #Keeps cube on screen
-        if white_cube_rect.left < 0:
-            white_cube_rect = white_cube_rect.move(width,0)
-        elif white_cube_rect.right > width:
-            white_cube_rect = white_cube_rect.move(-width,0)
-        elif white_cube_rect.top < 0:
-            white_cube_rect = white_cube_rect.move(0,height)
-        elif white_cube_rect.bottom > height:
-            white_cube_rect = white_cube_rect.move(0,-height)
-        
-        
+        #Keeps white cube on screen
+        white_cube_rect = keep_on_screen(white_cube_rect, width, height)
         
         screen.fill(black)
         
-        for (red_cube, red_cube_rect) in zip(red_cube_list, red_cube_rect_list):
-            screen.blit(red_cube, red_cube_rect)
+        for i in range(0, len(red_cube_list)):
+            red_cube_rect_list[i] = red_cube_rect_list[i].move(red_cube_speed_list[i])
+            red_cube_rect_list[i] = keep_on_screen(red_cube_rect_list[i], width, height)
+            
+            screen.blit(red_cube_list[i], red_cube_rect_list[i])
             
         screen.blit(white_cube, white_cube_rect)
         
@@ -154,6 +157,19 @@ def move_right(speed):
 
 def move_left(speed):
     speed[0] = -2
+
+def keep_on_screen(rect, width, height):
+    #Keeps cube on screen
+    if rect.left < 0:
+        rect = rect.move(width,0)
+    elif rect.right > width:
+        rect = rect.move(-width,0)
+    elif rect.top < 0:
+        rect = rect.move(0,height)
+    elif rect.bottom > height:
+        rect = rect.move(0,-height)
     
+    return rect
+
 if __name__== "__main__":
         main()
