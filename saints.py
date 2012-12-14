@@ -114,7 +114,7 @@ def main():
             elapsed_time = 0
             current_bad_cube_speed = 0
             
-            pygame.time.wait(2000)
+            pygame.time.wait(int(loss_tone.get_length() * 1000))
             
             pygame.mixer.music.rewind()
             pygame.mixer.music.play(-1)
@@ -142,7 +142,7 @@ def main():
                 elapsed_time = 0
                 current_bad_cube_speed = 0
                 
-                pygame.time.wait(2000)
+                pygame.time.wait(int(loss_tone.get_length() * 1000))
                 
                 pygame.mixer.music.rewind()
                 pygame.mixer.music.play(-1)
