@@ -36,6 +36,8 @@ def main():
     
     (white_cube, white_cube_rect) = load_image(image_folder + "white_cube.bmp")
     
+    game_clock = pygame.time.Clock()
+    
     red_cube_list = []
     red_cube_rect_list = []
     red_cube_speed_list = []
@@ -44,12 +46,12 @@ def main():
         red_cube_counter += 1
         
         #Creates red cubes
-        if red_cube_counter % 100 == 0:
+        if red_cube_counter % 30 == 0:
             is_done = False
             
             while not is_done:
                 (red_cube, red_cube_rect) = load_image(image_folder + 'red_cube.bmp' )
-                red_cube_rect = red_cube_rect.move(random.randint(0, width - 20), random.randint(0, height - 20) )
+                red_cube_rect = red_cube_rect.move(random.randint(20, width - 20), random.randint(20, height - 20) )
                 
                 #Prevents red cube from spawning directly on white cube
                 if not white_cube_rect.colliderect(red_cube_rect):
@@ -57,14 +59,14 @@ def main():
                     red_cube_rect_list.append(red_cube_rect)
                     
                     if random.randint(0, 1) == 0:
-                        red_cube_speed_list.append([0, random.randint(-1, 1)])
+                        red_cube_speed_list.append([0, random.randint(-2, 2)])
                     else:
-                        red_cube_speed_list.append([random.randint(-1, 1), 0])
+                        red_cube_speed_list.append([random.randint(-2, 2), 0])
                     
                     is_done = True
         
         #Deletes red cubes
-        if red_cube_counter % 200 == 0:
+        if red_cube_counter % 70 == 0:
             rand_index = random.randint(0, len(red_cube_list) - 1)
             del red_cube_list[rand_index]
             del red_cube_rect_list[rand_index]
@@ -138,7 +140,8 @@ def main():
         
         
         pygame.display.flip()
-        pygame.time.wait(5)
+        
+        game_clock.tick(60)
 
 def load_image(filename):
     image = pygame.image.load(filename).convert()
@@ -147,16 +150,16 @@ def load_image(filename):
     return (image, imagerect)
 
 def move_up(speed):
-    speed[1] = -2
+    speed[1] = -4
 
 def move_down(speed):
-    speed[1] = 2
+    speed[1] = 4
 
 def move_right(speed):
-    speed[0] = 2
+    speed[0] = 4
 
 def move_left(speed):
-    speed[0] = -2
+    speed[0] = -4
 
 def keep_on_screen(rect, width, height):
     #Keeps cube on screen
