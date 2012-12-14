@@ -38,65 +38,65 @@ def main():
     
     image_folder = settings['images']['folder_name'] + os.sep
     
-    (white_cube, white_cube_rect) = load_image(image_folder + settings['images']['good_cube'])
+    (good_cube, good_cube_rect) = load_image(image_folder + settings['images']['good_cube'])
     
-    #Move white cube to middle of screen
-    white_cube_rect = white_cube_rect.move(width//2, height//2)
+    #Move good cube to middle of screen
+    good_cube_rect = good_cube_rect.move(width//2, height//2)
     
     game_clock = pygame.time.Clock()
     
     elapsed_time = 0
-    red_cube_list = []
-    red_cube_rect_list = []
-    red_cube_speed_list = []
+    bad_cube_list = []
+    bad_cube_rect_list = []
+    bad_cube_speed_list = []
     
-    current_red_cube_speed = 0
-    red_cube_counter = 0
+    current_bad_cube_speed = 0
+    bad_cube_counter = 0
     while True:       
-        red_cube_counter += 1
+        bad_cube_counter += 1
         
-        #Creates red cubes
-        if red_cube_counter % seconds_to_frames(frame_rate, 0.3) == 0:
+        #Creates bad cubes
+        if bad_cube_counter % seconds_to_frames(frame_rate, 0.3) == 0:
             is_done = False
             
             while not is_done:
-                (red_cube, red_cube_rect) = load_image(image_folder + settings['images']['bad_cube'] )
-                red_cube_rect = red_cube_rect.move(random.randint(20, width - 20), random.randint(20, height - 20) )
+                (bad_cube, bad_cube_rect) = load_image(image_folder + settings['images']['bad_cube'] )
+                bad_cube_rect = bad_cube_rect.move(random.randint(20, width - 20), random.randint(20, height - 20) )
                 
-                #Prevents red cube from spawning around the white cube
-                if not white_cube_rect.inflate(100, 100).colliderect(red_cube_rect):
-                    red_cube_list.append(red_cube)
-                    red_cube_rect_list.append(red_cube_rect)
+                #Prevents bad cube from spawning around the good cube
+                if not good_cube_rect.inflate(100, 100).colliderect(bad_cube_rect):
+                    bad_cube_list.append(bad_cube)
+                    bad_cube_rect_list.append(bad_cube_rect)
                     
                     
-                    #Gets speed for new red cube
+                    #Gets speed for new bad cube
                     if random.randint(0, 1) == 0:
                         if random.randint(0, 1) == 0:
-                            new_speed = [0, current_red_cube_speed]
+                            new_speed = [0, current_bad_cube_speed]
                         else:
-                            new_speed = [0, -current_red_cube_speed]
+                            new_speed = [0, -current_bad_cube_speed]
                     else:
                         if random.randint(0, 1) == 0:
-                            new_speed = [current_red_cube_speed, 0]
+                            new_speed = [current_bad_cube_speed, 0]
                         else:
-                            new_speed = [-current_red_cube_speed, 0]
+                            new_speed = [-current_bad_cube_speed, 0]
                         
-                    red_cube_speed_list.append(new_speed)
+                    bad_cube_speed_list.append(new_speed)
                     
                     is_done = True
         
-        #Deletes red cubes
-        if red_cube_counter % seconds_to_frames(frame_rate, 0.6) == 0:
-            rand_index = random.randint(0, len(red_cube_list) - 1)
-            del red_cube_list[rand_index]
-            del red_cube_rect_list[rand_index]
-            del red_cube_speed_list[rand_index]
+        #Deletes bad cubes
+        if bad_cube_counter % seconds_to_frames(frame_rate, 0.6) == 0:
+            rand_index = random.randint(0, len(bad_cube_list) - 1)
+            del bad_cube_list[rand_index]
+            del bad_cube_rect_list[rand_index]
+            del bad_cube_speed_list[rand_index]
         
-        if red_cube_counter % seconds_to_frames(frame_rate, 10) == 0:
-            current_red_cube_speed += 1
+        if bad_cube_counter % seconds_to_frames(frame_rate, 10) == 0:
+            current_bad_cube_speed += 1
         
         #Detects loss condition
-        if len(red_cube_list) >= 1 and white_cube_rect.collidelist(red_cube_rect_list) > 0:
+        if len(bad_cube_list) >= 1 and good_cube_rect.collidelist(bad_cube_rect_list) > 0:
             print("You survived: " + str(elapsed_time/1000) + " seconds")
             sys.exit()
         
@@ -109,11 +109,11 @@ def main():
             
             #Restarts the game
             if pressed_keys[pygame.K_SPACE]:
-                red_cube_list = []
-                red_cube_rect_list = []
-                red_cube_speed_list = []
+                bad_cube_list = []
+                bad_cube_rect_list = []
+                bad_cube_speed_list = []
                 elapsed_time = 0
-                current_red_cube_speed = 0
+                current_bad_cube_speed = 0
             
             #Controls movement
             if pressed_keys[pygame.K_LEFT] and pressed_keys[pygame.K_UP]:
@@ -148,20 +148,20 @@ def main():
                 (speed[0], speed[1]) = (0, 0)
         
         
-        white_cube_rect = white_cube_rect.move(speed)
+        good_cube_rect = good_cube_rect.move(speed)
         
-        #Keeps white cube on screen
-        white_cube_rect = keep_on_screen(white_cube_rect, width, height)
+        #Keeps good cube on screen
+        good_cube_rect = keep_on_screen(good_cube_rect, width, height)
         
         screen.fill(black)
         
-        for i in range(0, len(red_cube_list)):
-            red_cube_rect_list[i] = red_cube_rect_list[i].move(red_cube_speed_list[i])
-            red_cube_rect_list[i] = keep_on_screen(red_cube_rect_list[i], width, height)
+        for i in range(0, len(bad_cube_list)):
+            bad_cube_rect_list[i] = bad_cube_rect_list[i].move(bad_cube_speed_list[i])
+            bad_cube_rect_list[i] = keep_on_screen(bad_cube_rect_list[i], width, height)
             
-            screen.blit(red_cube_list[i], red_cube_rect_list[i])
+            screen.blit(bad_cube_list[i], bad_cube_rect_list[i])
             
-        screen.blit(white_cube, white_cube_rect)
+        screen.blit(good_cube, good_cube_rect)
         
         
         pygame.display.flip()
