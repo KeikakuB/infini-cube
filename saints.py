@@ -39,6 +39,7 @@ def main():
     
     game_clock = pygame.time.Clock()
     
+    elapsed_time = 0
     red_cube_list = []
     red_cube_rect_list = []
     red_cube_speed_list = []
@@ -90,7 +91,7 @@ def main():
         
         #Detects loss condition
         if len(red_cube_list) >= 1 and white_cube_rect.collidelist(red_cube_rect_list) > 0:
-            print("You survived: " + str(pygame.time.get_ticks()/1000 - 2) + " seconds")
+            print("You survived: " + str(elapsed_time/1000) + " seconds")
             sys.exit()
         
         
@@ -105,6 +106,7 @@ def main():
                 red_cube_list = []
                 red_cube_rect_list = []
                 red_cube_speed_list = []
+                elapsed_time = 0
             
             #Controls movement
             if pressed_keys[pygame.K_LEFT] and pressed_keys[pygame.K_UP]:
@@ -157,6 +159,8 @@ def main():
         
         pygame.display.flip()
         
+        elapsed_time += game_clock.get_time()
+         
         game_clock.tick(frame_rate)
 
 def load_image(filename):
