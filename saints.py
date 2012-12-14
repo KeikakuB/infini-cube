@@ -26,7 +26,7 @@ def main():
     
     pygame.init()
 
-    size = width, height = (600, 200) 
+    size = width, height = (400, 400) 
     speed = [0, 0]
     black = (0, 0, 0)
     
@@ -34,20 +34,32 @@ def main():
     
     image_folder = "images" + os.sep
     
-    (background, background_rect) = load_image(image_folder + "background.jpg")
-    (avatar, avatar_rect) = load_image(image_folder + "megaman.jpg")
+    (white_cube, white_cube_rect) = load_image(image_folder + "white_cube.bmp")
     
-    bomb_list = []
-    bomb_counter = 0
+    red_cube_list = []
+    red_cube_rect_list = []
+    red_cube_counter = 0
     while True:
         
-        bomb_counter += 1
+        red_cube_counter += 1
         
-        if bomb_counter == 300:
-            (bomb, bomb_rect) = load_image(image_folder + 'Spike_Trap.png' )
-            bomb_rect = bomb_rect.move(random.randint(0, width), random.randint(0, height) )
-            bomb_list.append((bomb, bomb_rect))
-            bomb_counter = 0
+        #Creates red cubes
+        if red_cube_counter % 50 == 0:
+            (red_cube, red_cube_rect) = load_image(image_folder + 'red_cube.bmp' )
+            red_cube_rect = red_cube_rect.move(random.randint(0, width), random.randint(0, height) )
+            red_cube_list.append(red_cube)
+            red_cube_rect_list.append(red_cube_rect)
+        
+        #Deletes red cubes
+        if red_cube_counter % 100 == 0:
+            rand_index = random.randint(0, len(red_cube_list) - 1)
+            del red_cube_list[rand_index]
+            del red_cube_rect_list[rand_index]
+        
+        #Detects loss condition
+        if len(red_cube_list) >= 1 and white_cube_rect.collidelist(red_cube_rect_list) > 0:
+            print("You lose!")
+            sys.exit()
         
         
         for event in pygame.event.get():
@@ -88,23 +100,30 @@ def main():
                 (speed[0], speed[1]) = (0, 0)
         
         
-        avatar_rect = avatar_rect.move(speed)
-        if avatar_rect.left < 0 or avatar_rect.right > width:
-            speed[0] = 0
-        if avatar_rect.top < 0 or avatar_rect.bottom > height:
-            speed[1] = 0
+        white_cube_rect = white_cube_rect.move(speed)
         
-        screen.blit(background, background_rect)
+        #Keeps cube on screen
+        if white_cube_rect.left < 0:
+            white_cube_rect = white_cube_rect.move(width,0)
+        elif white_cube_rect.right > width:
+            white_cube_rect = white_cube_rect.move(-width,0)
+        elif white_cube_rect.top < 0:
+            white_cube_rect = white_cube_rect.move(0,height)
+        elif white_cube_rect.bottom > height:
+            white_cube_rect = white_cube_rect.move(0,-height)
         
-        for (bomb, bomb_rect) in bomb_list:
-            screen.blit(bomb, bomb_rect)
+        
+        
+        screen.fill(black)
+        
+        for (red_cube, red_cube_rect) in zip(red_cube_list, red_cube_rect_list):
+            screen.blit(red_cube, red_cube_rect)
             
-            
-        screen.blit(avatar, avatar_rect)
+        screen.blit(white_cube, white_cube_rect)
         
         
         pygame.display.flip()
-        pygame.time.wait(10)
+        pygame.time.wait(5)
 
 def load_image(filename):
     image = pygame.image.load(filename).convert()
