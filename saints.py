@@ -21,6 +21,9 @@ import logging
 import random
 import configparser
 
+from thecubes import Cube
+
+
 def main():
     
     def play_loss_sound():
@@ -56,17 +59,15 @@ def main():
     
     screen = pygame.display.set_mode(size)
     
-    (good_cube, good_cube_rect) = load_image(image_folder + settings['images']['good_cube'])
+    good_cube = Cube(image_folder + settings['images']['good_cube'])
     
     #Move good cube to middle of screen
-    good_cube_rect = good_cube_rect.move(width//2, height//2)
+    good_cube.rect = good_cube.rect.move(width//2, height//2)
     
     game_clock = pygame.time.Clock()
     
     elapsed_time = 0
     bad_cube_list = []
-    bad_cube_rect_list = []
-    bad_cube_speed_list = []
     
     current_bad_cube_speed = 0
     bad_cube_counter = 0
@@ -78,15 +79,11 @@ def main():
             is_done = False
             
             while not is_done:
-                (bad_cube, bad_cube_rect) = load_image(image_folder + settings['images']['bad_cube'] )
-                bad_cube_rect = bad_cube_rect.move(random.randint(20, width - 20), random.randint(20, height - 20) )
+                bad_cube = Cube(image_folder + settings['images']['bad_cube'] )
+                bad_cube.rect = bad_cube.rect.move(random.randint(20, width - 20), random.randint(20, height - 20) )
                 
                 #Prevents bad cube from spawning around the good cube
-                if not good_cube_rect.inflate(100, 100).colliderect(bad_cube_rect):
-                    bad_cube_list.append(bad_cube)
-                    bad_cube_rect_list.append(bad_cube_rect)
-                    
-                    
+                if not good_cube.rect.inflate(100, 100).colliderect(bad_cube.rect):
                     #Gets speed for new bad cube
                     if random.randint(0, 1) == 0:
                         if random.randint(0, 1) == 0:
@@ -98,8 +95,9 @@ def main():
                             new_speed = [current_bad_cube_speed, 0]
                         else:
                             new_speed = [-current_bad_cube_speed, 0]
-                        
-                    bad_cube_speed_list.append(new_speed)
+                    
+                    bad_cube.speed = new_speed
+                    bad_cube_list.append(bad_cube)
                     
                     is_done = True
         
@@ -107,19 +105,15 @@ def main():
         if bad_cube_counter % seconds_to_frames(frame_rate, 0.6) == 0:
             rand_index = random.randint(0, len(bad_cube_list) - 1)
             del bad_cube_list[rand_index]
-            del bad_cube_rect_list[rand_index]
-            del bad_cube_speed_list[rand_index]
         
         if bad_cube_counter % seconds_to_frames(frame_rate, 10) == 0:
             current_bad_cube_speed += 1
         
         #Detects loss condition
-        if len(bad_cube_list) >= 1 and good_cube_rect.collidelist(bad_cube_rect_list) > 0:
+        if len(bad_cube_list) >= 1 and good_cube.rect.collidelist( [cube.rect for cube in bad_cube_list] ) > 0:
             play_loss_sound()
                    
             bad_cube_list = []
-            bad_cube_rect_list = []
-            bad_cube_speed_list = []
             elapsed_time = 0
             current_bad_cube_speed = 0
         
@@ -138,8 +132,6 @@ def main():
                 play_loss_sound()
                 
                 bad_cube_list = []
-                bad_cube_rect_list = []
-                bad_cube_speed_list = []
                 elapsed_time = 0
                 current_bad_cube_speed = 0
             
@@ -176,20 +168,20 @@ def main():
                 (speed[0], speed[1]) = (0, 0)
         
         
-        good_cube_rect = good_cube_rect.move(speed)
+        good_cube.rect = good_cube.rect.move(speed)
         
         #Keeps good cube on screen
-        good_cube_rect = keep_on_screen(good_cube_rect, width, height)
+        good_cube.rect = keep_on_screen(good_cube.rect, width, height)
         
         screen.fill(black)
         
-        for i in range(0, len(bad_cube_list)):
-            bad_cube_rect_list[i] = bad_cube_rect_list[i].move(bad_cube_speed_list[i])
-            bad_cube_rect_list[i] = keep_on_screen(bad_cube_rect_list[i], width, height)
+        for bad_cube in bad_cube_list:
+            bad_cube.rect = bad_cube.rect.move(bad_cube.speed)
+            bad_cube.rect = keep_on_screen(bad_cube.rect, width, height)
             
-            screen.blit(bad_cube_list[i], bad_cube_rect_list[i])
+            screen.blit(bad_cube.surface, bad_cube.rect)
             
-        screen.blit(good_cube, good_cube_rect)
+        screen.blit(good_cube.surface, good_cube.rect)
         
         
         pygame.display.flip()
@@ -197,12 +189,6 @@ def main():
         elapsed_time += game_clock.get_time()
          
         game_clock.tick(frame_rate)
-
-def load_image(filename):
-    image = pygame.image.load(filename).convert()
-    imagerect = image.get_rect()
-    
-    return (image, imagerect)
 
 def seconds_to_frames(frame_rate, number_of_seconds):
     return int(number_of_seconds * frame_rate)
