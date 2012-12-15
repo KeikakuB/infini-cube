@@ -159,8 +159,8 @@ def main():
             else:
                 (speed[0], speed[1]) = (0, 0)
         
-        
-        good_cube.rect = good_cube.rect.move(speed)
+        good_cube.set_speed(speed)
+        good_cube.move()
         
         #Keeps good cube on screen
         good_cube.keep_on_screen()

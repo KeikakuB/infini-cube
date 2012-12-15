@@ -53,6 +53,10 @@ class Cube(object):
     def rect(self, new_rect):
         self._rect = new_rect
 
+    def set_speed(self, x_y_speed):
+        self._speed_x = x_y_speed[0]
+        self._speed_y = x_y_speed[1]
+
     @property
     def speed_x(self):
         return self._speed_x
