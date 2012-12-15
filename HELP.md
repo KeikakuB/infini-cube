@@ -3,5 +3,7 @@ Survive as long as possible as White Cube, a cube eternally chased by the cubifi
 
 CONTROLS:
 Move: Arrow Keys
+
 Restart: SpaceBar
+
 Quit: Escape
