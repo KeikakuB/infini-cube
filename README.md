@@ -1,7 +1,7 @@
-saints-column
-=============
+infini-cube
+===========
 
-First pygame project. It's gonna be magical.
+InfiniCube is an arcade-like avoid-them-all game. You play White Cube, a small but quick orphaned cube, forever chased by the cubifications of his personal demons, the Red Cubes.  
 
 "Digital Stream" used under a Creative Commons License from UniqueTracks Inc.
 
