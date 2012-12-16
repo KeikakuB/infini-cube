@@ -25,7 +25,6 @@ from thecubes import *
 
 
 def main():
-    
     LEFT = 'left'
     RIGHT = 'right'
     TOP = 'top'
@@ -48,6 +47,12 @@ def main():
         
     settings = configparser.ConfigParser()
     settings.read('config' + os.sep + 'settings.ini')
+    
+    if settings['gameplay']['CheatsEnabled'] == '1':
+        cheats_enabled = True
+    else:
+        cheats_enabled = False
+    
     
     sound_folder = settings['sound']['FolderName'] + os.sep
     
@@ -205,56 +210,39 @@ def main():
                 sys.exit()
             
             #DEBUG: Fast Round Switch
-            if pressed_keys[pygame.K_0]:
-                is_new_round = True
-                has_died = True
-                current_lives = 999
-                current_round = 0
-            if pressed_keys[pygame.K_1]:
-                is_new_round = True
-                has_died = True
-                current_lives = 999
-                current_round = 1
-            if pressed_keys[pygame.K_2]:
-                is_new_round = True
-                has_died = True
-                current_lives = 999
-                current_round = 2
-            if pressed_keys[pygame.K_3]:
-                is_new_round = True
-                has_died = True
-                current_lives = 999
-                current_round = 3
-            if pressed_keys[pygame.K_4]:
-                is_new_round = True
-                has_died = True
-                current_lives = 999
-                current_round = 4
-            if pressed_keys[pygame.K_5]:
-                is_new_round = True
-                has_died = True
-                current_lives = 999
-                current_round = 5
-            if pressed_keys[pygame.K_6]:
-                is_new_round = True
-                has_died = True
-                current_lives = 999
-                current_round = 6
-            if pressed_keys[pygame.K_7]:
-                is_new_round = True
-                has_died = True
-                current_lives = 999
-                current_round = 7
-            if pressed_keys[pygame.K_8]:
-                is_new_round = True
-                has_died = True
-                current_lives = 999
-                current_round = 8
-            if pressed_keys[pygame.K_9]:
-                is_new_round = True
-                has_died = True
-                current_lives = 999
-                current_round = 9
+            if cheats_enabled:
+                def set_round(round_number):
+                    return (round_number, True, True, 999)
+                
+                round_num = -1
+                
+                if pressed_keys[pygame.K_0]:
+                    round_num = 0
+                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                elif pressed_keys[pygame.K_1]:
+                    round_num = 1
+                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                elif pressed_keys[pygame.K_2]:
+                    round_num = 2
+                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                elif pressed_keys[pygame.K_3]:
+                    round_num = 3
+                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                elif pressed_keys[pygame.K_4]:
+                    round_num = 4
+                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                elif pressed_keys[pygame.K_5]:
+                    round_num = 5
+                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                elif pressed_keys[pygame.K_6]:
+                    round_num = 6
+                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                elif pressed_keys[pygame.K_7]:
+                    round_num = 7
+                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                elif pressed_keys[pygame.K_8]:
+                    round_num = 8
+                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
             
             
             #Controls movement
