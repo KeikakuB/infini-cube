@@ -79,10 +79,19 @@ def main():
     current_round = 0
     
     max_lives = int(settings['gameplay']['NumberOfLives'])
-    current_lives = max_lives 
+    current_lives = max_lives
     
     round_display = font.render("Round: " + str(current_round), True, (255, 255, 255))
     lives_display = font.render("Lives: " + str(current_lives), True, (255, 255, 255))
+    
+    bad_cube_counts = [0, 0, 0, 0]
+    
+    max_hori_cubes = int(settings['gameplay']['MaxHoriCubes'])
+    max_verti_cubes = int(settings['gameplay']['MaxVertiCubes'])
+    max_dia_cubes = int(settings['gameplay']['MaxDiaCubes'])
+    max_rock_cubes = int(settings['gameplay']['MaxRockCubes'])
+    
+    bad_cube_maxes = [max_hori_cubes,max_verti_cubes,max_dia_cubes, max_rock_cubes]
     
     bad_cube_list = []
     bad_cube_counter = 0
@@ -97,6 +106,7 @@ def main():
             
             good_cube = PlayerCube()
             bad_cube_list = []
+            bad_cube_counts = [0, 0, 0, 0]
             speed_modifier = 0
             
         #Creates bad cubes
@@ -108,18 +118,24 @@ def main():
                 cube_type = random.randint(0, 3)
                 
                 new_speed = base_bad_cube_speed + speed_modifier + current_round
-                if cube_type == 0:
-                    bad_cube = HoriCube(new_speed)
-                elif cube_type == 1:
-                    bad_cube = VertiCube(new_speed)
-                elif cube_type == 2:
-                    bad_cube = DiaCube(new_speed)
-                elif cube_type == 3:
-                    bad_cube = RockCube()
                 
-                if not good_cube.rect.inflate(safety_zone_x, safety_zone_y).colliderect(bad_cube.rect):
-                    bad_cube_list.append(bad_cube)
-                    is_spawned = True
+                if bad_cube_counts[cube_type] < bad_cube_maxes[cube_type]:
+                    if cube_type == 0:
+                        bad_cube = HoriCube(new_speed)
+                        bad_cube_counts[cube_type] += 1
+                    elif cube_type == 1:
+                        bad_cube = VertiCube(new_speed)
+                        bad_cube_counts[cube_type] += 1
+                    elif cube_type == 2:
+                        bad_cube = DiaCube(new_speed)
+                        bad_cube_counts[cube_type] += 1
+                    elif cube_type == 3:
+                        bad_cube = RockCube()
+                        bad_cube_counts[cube_type] += 1
+                    
+                    if not good_cube.rect.inflate(safety_zone_x, safety_zone_y).colliderect(bad_cube.rect):
+                        bad_cube_list.append(bad_cube)
+                        is_spawned = True
         
         if bad_cube_counter % seconds_to_frames(frame_rate, float(settings['gameplay']['SecondsPerLevel'])) == 0:
             speed_modifier += 1
@@ -130,6 +146,7 @@ def main():
             
             good_cube = PlayerCube()
             bad_cube_list = []
+            bad_cube_counts = [0, 0, 0, 0]
             speed_modifier = 0
             
             if current_round != 0:
@@ -158,6 +175,8 @@ def main():
                 
                 good_cube = PlayerCube()
                 bad_cube_list = []
+                bad_cube_counts = [0, 0, 0, 0]
+                
                 speed_modifier = 0
                 
                 current_round = 0
@@ -183,6 +202,18 @@ def main():
                 good_cube.speed_y = -good_cube_speed
             else:
                 good_cube.speed_y = 0
+            
+            #Keeps absolute speed constant-ish diagonal vs. straight
+            if good_cube.speed_x and good_cube.speed_y:
+                if good_cube.speed_x > 0:
+                    good_cube.speed_x = good_cube.speed_x // 2 + 2
+                else:
+                    good_cube.speed_x = good_cube.speed_x // 2 - 2
+                
+                if good_cube.speed_y > 0:
+                    good_cube.speed_y = good_cube.speed_y // 2 + 1
+                else:
+                    good_cube.speed_y = good_cube.speed_y // 2 - 1
         
         good_cube.move()
         
