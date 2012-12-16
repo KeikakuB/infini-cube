@@ -79,14 +79,14 @@ class Cube(object):
     
     def keep_on_screen(self):
         #Keeps cube on screen
-        if self.rect.left < spawn_buffer:
-            self.rect = self.rect.move(width - spawn_buffer,0)
+        if self.rect.left < -spawn_buffer:
+            self.rect = self.rect.move(width + spawn_buffer,0)
         elif self.rect.right > width + spawn_buffer:
-            self.rect = self.rect.move(-width + spawn_buffer,0)
-        elif self.rect.top < spawn_buffer:
-            self.rect = self.rect.move(0,height - spawn_buffer)
+            self.rect = self.rect.move(-width - spawn_buffer,0)
+        elif self.rect.top < -spawn_buffer:
+            self.rect = self.rect.move(0,height + spawn_buffer)
         elif self.rect.bottom > height + spawn_buffer:
-            self.rect = self.rect.move(0,-height + spawn_buffer)
+            self.rect = self.rect.move(0,-height - spawn_buffer)
 
 class PlayerCube(Cube):
     def __init__(self):
