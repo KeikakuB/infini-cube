@@ -215,33 +215,37 @@ def main():
                     return (round_number, True, True, 999)
                 
                 round_num = -1
+                is_skip_round = False
                 
                 if pressed_keys[pygame.K_0]:
                     round_num = 0
-                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                    is_skip_round = True
                 elif pressed_keys[pygame.K_1]:
                     round_num = 1
-                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                    is_skip_round = True
                 elif pressed_keys[pygame.K_2]:
                     round_num = 2
-                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                    is_skip_round = True
                 elif pressed_keys[pygame.K_3]:
                     round_num = 3
-                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                    is_skip_round = True
                 elif pressed_keys[pygame.K_4]:
                     round_num = 4
-                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                    is_skip_round = True
                 elif pressed_keys[pygame.K_5]:
                     round_num = 5
-                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                    is_skip_round = True
                 elif pressed_keys[pygame.K_6]:
                     round_num = 6
-                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                    is_skip_round = True
                 elif pressed_keys[pygame.K_7]:
                     round_num = 7
-                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                    is_skip_round = True
                 elif pressed_keys[pygame.K_8]:
                     round_num = 8
+                    is_skip_round = True
+                
+                if is_skip_round:
                     (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
             
             
