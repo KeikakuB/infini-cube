@@ -71,6 +71,8 @@ def main():
     game_clock = pygame.time.Clock()
     
     
+    good_cube_speed = int(settings['gameplay']['GoodCubeSpeed'])
+    
     base_bad_cube_speed = int(settings['gameplay']['StartSpeed'])
     speed_modifier = 0
     max_speed_modifier = int(settings['gameplay']['SpeedLevelsPerRound'])
@@ -94,6 +96,7 @@ def main():
             
             play_sound('NextRound')
             
+            good_cube = PlayerCube()
             bad_cube_list = []
             speed_modifier = 0
             
@@ -128,7 +131,7 @@ def main():
             speed_modifier += 1
         
         #Detects loss condition
-        if len(bad_cube_list) >= 1 and good_cube.rect.collidelist( [cube.rect for cube in bad_cube_list] ) > 0:
+        if len(bad_cube_list) >= 1 and good_cube.rect.collidelist( [cube.rect for cube in bad_cube_list] ) != -1:
             play_sound('Loss')
             
             good_cube = PlayerCube()
@@ -167,19 +170,19 @@ def main():
             
             #Controls movement
             if pressed_keys[pygame.K_LEFT]:
-                good_cube.speed_x = -4
+                good_cube.speed_x = -good_cube_speed
                 
             elif pressed_keys[pygame.K_RIGHT]:
-                good_cube.speed_x = 4
+                good_cube.speed_x = good_cube_speed
             
             else:
                 good_cube.speed_x = 0
                 
             if pressed_keys[pygame.K_DOWN]:
-                good_cube.speed_y = 4
+                good_cube.speed_y = good_cube_speed
             
             elif pressed_keys[pygame.K_UP]:
-                good_cube.speed_y = -4
+                good_cube.speed_y = -good_cube_speed
             else:
                 good_cube.speed_y = 0
         
