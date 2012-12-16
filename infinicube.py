@@ -166,38 +166,23 @@ def main():
                 current_lives = max_lives
             
             #Controls movement
-            if pressed_keys[pygame.K_LEFT] and pressed_keys[pygame.K_UP]:
-                move_left(speed)
-                move_up(speed)
-                
-            elif pressed_keys[pygame.K_LEFT] and pressed_keys[pygame.K_DOWN]: 
-                move_left(speed)
-                move_down(speed)
-            
-            elif pressed_keys[pygame.K_RIGHT] and pressed_keys[pygame.K_UP]:
-                move_right(speed)
-                move_up(speed)
-                
-            elif pressed_keys[pygame.K_RIGHT] and pressed_keys[pygame.K_DOWN]: 
-                move_right(speed)
-                move_down(speed)
-            
             if pressed_keys[pygame.K_LEFT]:
-                move_left(speed)
+                good_cube.speed_x = -4
                 
             elif pressed_keys[pygame.K_RIGHT]:
-                move_right(speed)
-            
-            elif pressed_keys[pygame.K_DOWN]:
-                move_down(speed)
-            
-            elif pressed_keys[pygame.K_UP]:
-                move_up(speed)
+                good_cube.speed_x = 4
             
             else:
-                (speed[0], speed[1]) = (0, 0)
+                good_cube.speed_x = 0
+                
+            if pressed_keys[pygame.K_DOWN]:
+                good_cube.speed_y = 4
+            
+            elif pressed_keys[pygame.K_UP]:
+                good_cube.speed_y = -4
+            else:
+                good_cube.speed_y = 0
         
-        good_cube.set_speed(speed)
         good_cube.move()
         
         #Keeps good cube on screen
@@ -225,18 +210,6 @@ def main():
 
 def seconds_to_frames(frame_rate, number_of_seconds):
     return int(number_of_seconds * frame_rate)
-
-def move_up(speed):
-    speed[1] = -4
-
-def move_down(speed):
-    speed[1] = 4
-
-def move_right(speed):
-    speed[0] = 4
-
-def move_left(speed):
-    speed[0] = -4
 
 if __name__== "__main__":
         main()
