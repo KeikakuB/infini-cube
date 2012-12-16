@@ -108,6 +108,8 @@ def main():
             
             round_str = 'round' + str(current_round)
             
+            round_name = round_settings[round_str]['Name']
+            
             good_cube = PlayerCube()
             
             good_cube_speed = int(round_settings[round_str]['GoodCubeSpeed'])
@@ -137,7 +139,7 @@ def main():
             
             frame_counter = 0
             
-            round_display = font.render("Round: " + str(current_round), True, (255, 255, 255))
+            round_display = font.render("Round #" + str(current_round) + ': ' + round_name, True, (255, 255, 255))
             lives_display = font.render("Lives: " + str(current_lives), True, (255, 255, 255))
             
             is_new_round = False
