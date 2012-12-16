@@ -46,7 +46,6 @@ def main():
     sound_folder = settings['sound']['FolderName'] + os.sep
     
     size = width, height = (int(settings['graphics']['Width']), int(settings['graphics']['Height'])) 
-    speed = [0, 0]
     black = (0, 0, 0)
     frame_rate = int(settings['gameplay']['FrameRate'])
     
@@ -71,53 +70,84 @@ def main():
     game_clock = pygame.time.Clock()
     
     
-    good_cube_speed = int(settings['gameplay']['GoodCubeSpeed'])
-    
-    base_bad_cube_speed = int(settings['gameplay']['StartSpeed'])
-    speed_modifier = 0
-    max_speed_modifier = int(settings['gameplay']['SpeedLevelsPerRound'])
-    current_round = 0
+    round_settings = configparser.ConfigParser()
+    round_settings.read('config' + os.sep + 'rounds.ini')
     
     max_lives = int(settings['gameplay']['NumberOfLives'])
     current_lives = max_lives
     
-    round_display = font.render("Round: " + str(current_round), True, (255, 255, 255))
-    lives_display = font.render("Lives: " + str(current_lives), True, (255, 255, 255))
-    
-    bad_cube_counts = [0, 0, 0, 0]
-    
-    max_hori_cubes = int(settings['gameplay']['MaxHoriCubes'])
-    max_verti_cubes = int(settings['gameplay']['MaxVertiCubes'])
-    max_dia_cubes = int(settings['gameplay']['MaxDiaCubes'])
-    max_rock_cubes = int(settings['gameplay']['MaxRockCubes'])
-    
-    bad_cube_maxes = [max_hori_cubes,max_verti_cubes,max_dia_cubes, max_rock_cubes]
-    
-    bad_cube_list = []
-    bad_cube_counter = 0
-    while True:       
-        bad_cube_counter += 1
+    current_round = -1
+    is_new_round = True
+    has_died = False
+    while True:
         
-        if speed_modifier == max_speed_modifier:
-            current_round += 1
-            round_display = font.render("Round: " + str(current_round), True, (255, 255, 255))
+        if is_new_round or has_died:            
+            if not has_died and current_round != -1:
+                play_sound('NextRound')
+                current_round += 1
+                current_lives += 1 
+                
+            if current_round == -1:
+                current_round += 1                     
+                
+            if has_died:
+                play_sound('Loss')
+                
+                if current_round != 0:
+                    current_lives -= 1
+                
+                if current_lives == 0:
+                    current_round = 0
+                    current_lives = max_lives
             
-            play_sound('NextRound')
+            round_str = 'round' + str(current_round)
             
             good_cube = PlayerCube()
-            bad_cube_list = []
-            bad_cube_counts = [0, 0, 0, 0]
+            
+            good_cube_speed = int(round_settings[round_str]['GoodCubeSpeed'])
+            
+            
+            base_bad_cube_speed = int(round_settings[round_str]['StartSpeed'])
             speed_modifier = 0
             
+            max_speed_modifier = int(round_settings[round_str]['SpeedLevelsPerRound'])
+            seconds_per_level = float(round_settings[round_str]['SecondsPerLevel'])
+            
+            bad_cube_spawn_rate = float(round_settings[round_str]['SpawnRate'])
+            
+            max_hori_cubes = int(round_settings[round_str]['MaxHoriCubes'])
+            max_verti_cubes = int(round_settings[round_str]['MaxVertiCubes'])
+            max_dia_cubes = int(round_settings[round_str]['MaxDiaCubes'])
+            max_rock_cubes = int(round_settings[round_str]['MaxRockCubes'])
+            
+            bad_cube_maxes = [max_hori_cubes,max_verti_cubes,max_dia_cubes, max_rock_cubes]
+            
+            bad_cube_list = []
+            bad_cube_counts = [0, 0, 0, 0]
+            
+            frame_counter = 0
+            
+            round_display = font.render("Round: " + str(current_round), True, (255, 255, 255))
+            lives_display = font.render("Lives: " + str(current_lives), True, (255, 255, 255))
+            
+            is_new_round = False
+            has_died = False
+        
+        
+        frame_counter += 1
+        
+        if speed_modifier == max_speed_modifier:
+            is_new_round = True
+            
         #Creates bad cubes
-        if bad_cube_counter % seconds_to_frames(frame_rate, float(settings['gameplay']['SpawnRate'])) == 0:
+        if frame_counter % seconds_to_frames(frame_rate, bad_cube_spawn_rate) == 0:
             
             is_spawned = False
             
             while not is_spawned:
                 cube_type = random.randint(0, 3)
                 
-                new_speed = base_bad_cube_speed + speed_modifier + current_round
+                new_speed = base_bad_cube_speed + speed_modifier
                 
                 if bad_cube_counts[cube_type] < bad_cube_maxes[cube_type]:
                     if cube_type == 0:
@@ -137,27 +167,12 @@ def main():
                         bad_cube_list.append(bad_cube)
                         is_spawned = True
         
-        if bad_cube_counter % seconds_to_frames(frame_rate, float(settings['gameplay']['SecondsPerLevel'])) == 0:
+        if frame_counter % seconds_to_frames(frame_rate, seconds_per_level) == 0:
             speed_modifier += 1
         
         #Detects loss condition
         if len(bad_cube_list) >= 1 and good_cube.rect.collidelist( [cube.rect for cube in bad_cube_list] ) != -1:
-            play_sound('Loss')
-            
-            good_cube = PlayerCube()
-            bad_cube_list = []
-            bad_cube_counts = [0, 0, 0, 0]
-            speed_modifier = 0
-            
-            if current_round != 0:
-                current_lives -= 1
-            
-            if current_lives == 0:
-                current_round = 0
-                current_lives = max_lives
-                round_display = font.render("Round: " + str(current_round), True, (255, 255, 255))
-            
-            lives_display = font.render("Lives: " + str(current_lives), True, (255, 255, 255))
+            has_died = True
         
         
         for event in pygame.event.get():
@@ -166,24 +181,62 @@ def main():
             
             pressed_keys = pygame.key.get_pressed()
             
+            
             if pressed_keys[pygame.K_ESCAPE]:
                 sys.exit()
-                
-            #Restarts the game
-            if pressed_keys[pygame.K_SPACE]:
-                play_sound('Loss')
-                
-                good_cube = PlayerCube()
-                bad_cube_list = []
-                bad_cube_counts = [0, 0, 0, 0]
-                
-                speed_modifier = 0
-                
+            
+            #DEBUG: Fast Round Switch
+            if pressed_keys[pygame.K_0]:
+                is_new_round = True
+                has_died = True
+                current_lives = 999
                 current_round = 0
-                current_lives = max_lives
-                
-                round_display = font.render("Round: " + str(current_round), True, (255, 255, 255))
-                lives_display = font.render("Lives: " + str(current_lives), True, (255, 255, 255))
+            if pressed_keys[pygame.K_1]:
+                is_new_round = True
+                has_died = True
+                current_lives = 999
+                current_round = 1
+            if pressed_keys[pygame.K_2]:
+                is_new_round = True
+                has_died = True
+                current_lives = 999
+                current_round = 2
+            if pressed_keys[pygame.K_3]:
+                is_new_round = True
+                has_died = True
+                current_lives = 999
+                current_round = 3
+            if pressed_keys[pygame.K_4]:
+                is_new_round = True
+                has_died = True
+                current_lives = 999
+                current_round = 4
+            if pressed_keys[pygame.K_5]:
+                is_new_round = True
+                has_died = True
+                current_lives = 999
+                current_round = 5
+            if pressed_keys[pygame.K_6]:
+                is_new_round = True
+                has_died = True
+                current_lives = 999
+                current_round = 6
+            if pressed_keys[pygame.K_7]:
+                is_new_round = True
+                has_died = True
+                current_lives = 999
+                current_round = 7
+            if pressed_keys[pygame.K_8]:
+                is_new_round = True
+                has_died = True
+                current_lives = 999
+                current_round = 8
+            if pressed_keys[pygame.K_9]:
+                is_new_round = True
+                has_died = True
+                current_lives = 999
+                current_round = 9
+            
             
             #Controls movement
             if pressed_keys[pygame.K_LEFT]:
