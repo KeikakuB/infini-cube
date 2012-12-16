@@ -26,6 +26,12 @@ from thecubes import *
 
 def main():
     
+    LEFT = 'left'
+    RIGHT = 'right'
+    TOP = 'top'
+    BOTTOM = 'bottom'
+    
+    
     def play_sound(sound_name):
         pygame.mixer.music.stop()
         
@@ -115,15 +121,19 @@ def main():
             
             bad_cube_spawn_rate = float(round_settings[round_str]['SpawnRate'])
             
-            max_hori_cubes = int(round_settings[round_str]['MaxHoriCubes'])
-            max_verti_cubes = int(round_settings[round_str]['MaxVertiCubes'])
+            max_hori_left_cubes = int(round_settings[round_str]['MaxHoriLCubes'])
+            max_hori_right_cubes = int(round_settings[round_str]['MaxHoriRCubes'])
+            
+            max_verti_top_cubes = int(round_settings[round_str]['MaxVertiTCubes'])
+            max_verti_bottom_cubes = int(round_settings[round_str]['MaxVertiBCubes'])
+            
             max_dia_cubes = int(round_settings[round_str]['MaxDiaCubes'])
             max_rock_cubes = int(round_settings[round_str]['MaxRockCubes'])
             
-            bad_cube_maxes = [max_hori_cubes,max_verti_cubes,max_dia_cubes, max_rock_cubes]
+            bad_cube_maxes = [max_hori_left_cubes,max_hori_right_cubes,max_verti_top_cubes, max_verti_bottom_cubes,max_dia_cubes, max_rock_cubes]
             
             bad_cube_list = []
-            bad_cube_counts = [0, 0, 0, 0]
+            bad_cube_counts = [0, 0, 0, 0, 0, 0]
             
             frame_counter = 0
             
@@ -145,23 +155,30 @@ def main():
             is_spawned = False
             
             while not is_spawned:
-                cube_type = random.randint(0, 3)
+                cube_type = random.randint(0, 5)
                 
                 new_speed = base_bad_cube_speed + speed_modifier
                 
                 if bad_cube_counts[cube_type] < bad_cube_maxes[cube_type]:
                     if cube_type == 0:
-                        bad_cube = HoriCube(new_speed)
+                        bad_cube = HoriCube(LEFT, new_speed)
                         bad_cube_counts[cube_type] += 1
                     elif cube_type == 1:
-                        bad_cube = VertiCube(new_speed)
+                        bad_cube = HoriCube(RIGHT, new_speed)
                         bad_cube_counts[cube_type] += 1
                     elif cube_type == 2:
-                        bad_cube = DiaCube(new_speed)
+                        bad_cube = VertiCube(TOP, new_speed)
                         bad_cube_counts[cube_type] += 1
                     elif cube_type == 3:
+                        bad_cube = VertiCube(BOTTOM, new_speed)
+                        bad_cube_counts[cube_type] += 1
+                    elif cube_type == 4:
+                        bad_cube = DiaCube(new_speed)
+                        bad_cube_counts[cube_type] += 1
+                    elif cube_type == 5:
                         bad_cube = RockCube()
                         bad_cube_counts[cube_type] += 1
+                    
                     
                     if not good_cube.rect.inflate(safety_zone_x, safety_zone_y).colliderect(bad_cube.rect):
                         bad_cube_list.append(bad_cube)

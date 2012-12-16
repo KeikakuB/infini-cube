@@ -16,6 +16,11 @@ import random
 import configparser
 import os
 
+LEFT = 'left'
+RIGHT = 'right'
+TOP = 'top'
+BOTTOM = 'bottom'
+    
 settings = configparser.ConfigParser()
 settings.read('config' + os.sep + 'settings.ini')
 
@@ -28,8 +33,11 @@ spawn_buffer = int(settings['gameplay']['SpawnBuffer'])
 image_folder = settings['images']['FolderName'] + os.sep
 
 player_filename = image_folder + settings['images']['PlayerCube']
-hori_filename = image_folder + settings['images']['HoriCube']
-verti_filename = image_folder + settings['images']['VertiCube']
+hori_left_filename = image_folder + settings['images']['HoriLCube']
+hori_right_filename = image_folder + settings['images']['HoriRCube']
+
+verti_top_filename = image_folder + settings['images']['VertiTCube']
+verti_bottom_filename = image_folder + settings['images']['VertiBCube']
 rock_filename = image_folder + settings['images']['RockCube']
 dia_filename = image_folder + settings['images']['DiaCube']
 
@@ -92,35 +100,40 @@ class PlayerCube(Cube):
     def __init__(self):
         super().__init__(player_filename)
         
+        self.rect = self.rect.inflate(-5,-5)
         #Move cube to middle of screen
         self.rect.center = (width//2, height//2)
 
 class HoriCube(Cube):
     
-    def __init__(self, speed):
-        super().__init__(hori_filename)
+    def __init__(self, direction, speed):
+        assert direction == LEFT or direction == RIGHT
         
-        if random.randint(0,1):
-            spawn_delta = get_spawn_delta('left')
+        if direction == LEFT:
+            super().__init__(hori_left_filename)
+            spawn_delta = get_spawn_delta(LEFT)
             self.speed_x = speed
-        else:
-            spawn_delta = get_spawn_delta('right')
+        
+        elif direction == RIGHT:
+            super().__init__(hori_right_filename)
+            spawn_delta = get_spawn_delta(RIGHT)
             self.speed_x = -speed
         
         self.rect.center = (spawn_delta[0], spawn_delta[1])
 
 class VertiCube(Cube):
     
-    def __init__(self, speed):
-        super().__init__(verti_filename)
-        
-        if random.randint(0,1):
-            spawn_delta = get_spawn_delta('top')
+    def __init__(self, direction, speed):
+        if direction == TOP:
+            super().__init__(verti_top_filename)
+            spawn_delta = get_spawn_delta(TOP)
             self.speed_y = speed
-        else:
-            spawn_delta = get_spawn_delta('bottom')
-            self.speed_y = -speed
         
+        elif direction == BOTTOM:
+            super().__init__(verti_bottom_filename)
+            spawn_delta = get_spawn_delta(BOTTOM)
+            self.speed_y = -speed
+            
         self.rect.center = (spawn_delta[0], spawn_delta[1])
 
 class RockCube(Cube):
