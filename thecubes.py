@@ -107,7 +107,7 @@ class HoriCube(Cube):
             spawn_delta = get_spawn_delta('right')
             self.speed_x = -speed
         
-        self.rect = self.rect.move(spawn_delta[0], spawn_delta[1])
+        self.rect.center = (spawn_delta[0], spawn_delta[1])
 
 class VertiCube(Cube):
     
@@ -121,7 +121,7 @@ class VertiCube(Cube):
             spawn_delta = get_spawn_delta('bottom')
             self.speed_y = -speed
         
-        self.rect = self.rect.move(spawn_delta[0], spawn_delta[1])
+        self.rect.center = (spawn_delta[0], spawn_delta[1])
 
 class RockCube(Cube):
     
@@ -130,7 +130,7 @@ class RockCube(Cube):
         
         spawn_delta = get_spawn_delta('anywhere')
         
-        self.rect = self.rect.move(spawn_delta[0], spawn_delta[1])
+        self.rect.center = (spawn_delta[0], spawn_delta[1])
        
 class DiaCube(Cube):
     def __init__(self, speed):
@@ -162,7 +162,7 @@ class DiaCube(Cube):
             else:
                 self.speed_x = -speed
         
-        self.rect = self.rect.move(spawn_delta[0], spawn_delta[1])
+        self.rect.center = (spawn_delta[0], spawn_delta[1])
 
 def get_spawn_delta(direction):
     if direction == 'left':
