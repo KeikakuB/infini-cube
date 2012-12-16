@@ -57,7 +57,7 @@ def main():
     
     font = pygame.font.SysFont("comicsansms", 12)
     
-    pygame.display.set_caption("InfiniCube v0.4")
+    pygame.display.set_caption("InfiniCube v0.5")
     
     pygame.mixer.music.load(sound_folder + settings['sound']['Theme'])
     pygame.mixer.music.set_volume(float(settings['sound']['Volume']))
