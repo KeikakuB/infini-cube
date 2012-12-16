@@ -30,6 +30,7 @@ image_folder = settings['images']['FolderName'] + os.sep
 player_filename = image_folder + settings['images']['PlayerCube']
 hori_filename = image_folder + settings['images']['HoriCube']
 verti_filename = image_folder + settings['images']['VertiCube']
+rock_filename = image_folder + settings['images']['RockCube']
 dia_filename = image_folder + settings['images']['DiaCube']
 
 
@@ -92,7 +93,7 @@ class PlayerCube(Cube):
         super().__init__(player_filename)
         
         #Move cube to middle of screen
-        self.rect = self.rect.move(width//2, height//2)
+        self.rect.center = (width//2, height//2)
 
 class HoriCube(Cube):
     
@@ -121,7 +122,16 @@ class VertiCube(Cube):
             self.speed_y = -speed
         
         self.rect = self.rect.move(spawn_delta[0], spawn_delta[1])
-            
+
+class RockCube(Cube):
+    
+    def __init__(self):
+        super().__init__(rock_filename)
+        
+        spawn_delta = get_spawn_delta('anywhere')
+        
+        self.rect = self.rect.move(spawn_delta[0], spawn_delta[1])
+       
 class DiaCube(Cube):
     def __init__(self, speed):
         super().__init__(dia_filename)
@@ -163,6 +173,8 @@ def get_spawn_delta(direction):
         return [random.randint(spawn_buffer, width - spawn_buffer), spawn_buffer]
     elif direction == 'bottom':
         return [random.randint(spawn_buffer, width - spawn_buffer), height - spawn_buffer]
+    elif direction == 'anywhere':
+        return [random.randint(spawn_buffer, width - spawn_buffer), random.randint(spawn_buffer, height - spawn_buffer)]
 
 def load_image(filename):
     image = pygame.image.load(filename).convert()
