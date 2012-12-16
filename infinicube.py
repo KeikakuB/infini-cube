@@ -77,12 +77,10 @@ def main():
     speed_modifier = 0
     max_speed_modifier = int(settings['gameplay']['SpeedLevelsPerRound'])
     current_round = 0
-    elapsed_time = 0
     
     max_lives = int(settings['gameplay']['NumberOfLives'])
     current_lives = max_lives 
     
-    time_display = font.render(str(int(elapsed_time / 1000)), True, (255, 255, 255))
     round_display = font.render("Round: " + str(current_round), True, (255, 255, 255))
     lives_display = font.render("Lives: " + str(current_lives), True, (255, 255, 255))
     
@@ -93,6 +91,7 @@ def main():
         
         if speed_modifier == max_speed_modifier:
             current_round += 1
+            round_display = font.render("Round: " + str(current_round), True, (255, 255, 255))
             
             play_sound('NextRound')
             
@@ -100,11 +99,6 @@ def main():
             bad_cube_list = []
             speed_modifier = 0
             
-        if bad_cube_counter % seconds_to_frames(frame_rate, 1) == 0:
-            time_display = font.render(str(int(elapsed_time / 1000)), True, (255, 255, 255))
-            round_display = font.render("Round: " + str(current_round), True, (255, 255, 255))
-            lives_display = font.render("Lives: " + str(current_lives), True, (255, 255, 255))
-        
         #Creates bad cubes
         if bad_cube_counter % seconds_to_frames(frame_rate, float(settings['gameplay']['SpawnRate'])) == 0:
             
@@ -142,9 +136,11 @@ def main():
                 current_lives -= 1
             
             if current_lives == 0:
-                elapsed_time = 0
                 current_round = 0
                 current_lives = max_lives
+                round_display = font.render("Round: " + str(current_round), True, (255, 255, 255))
+            
+            lives_display = font.render("Lives: " + str(current_lives), True, (255, 255, 255))
         
         
         for event in pygame.event.get():
@@ -162,11 +158,13 @@ def main():
                 
                 good_cube = PlayerCube()
                 bad_cube_list = []
-                elapsed_time = 0
                 speed_modifier = 0
                 
                 current_round = 0
                 current_lives = max_lives
+                
+                round_display = font.render("Round: " + str(current_round), True, (255, 255, 255))
+                lives_display = font.render("Lives: " + str(current_lives), True, (255, 255, 255))
             
             #Controls movement
             if pressed_keys[pygame.K_LEFT]:
@@ -199,15 +197,12 @@ def main():
             
             screen.blit(bad_cube.surface, bad_cube.rect)
         
-        screen.blit(time_display, (width-15,height-20))
         screen.blit(round_display, (4,2))
         screen.blit(lives_display, (4,height-20))
             
         screen.blit(good_cube.surface, good_cube.rect)        
         
         pygame.display.flip()
-        
-        elapsed_time += game_clock.get_time()
          
         game_clock.tick(frame_rate)
 
