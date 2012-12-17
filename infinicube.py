@@ -21,7 +21,7 @@ import logging
 import random
 import configparser
 
-from thecubes import *
+from thecubes import PlayerCube, HoriLeftCube, HoriRightCube, VertiTopCube, VertiBotCube, DiaCube, RockCube
 
 
 def main():
@@ -105,15 +105,14 @@ def main():
     has_died = False
     while True:
         
-        if good_cube.rect.collidelist(score_zones) != -1:
-            zone_index = good_cube.rect.collidelist(score_zones)
-            
+        zone_index = good_cube.rect.collidelist(score_zones)
+        if zone_index != -1:            
             if zone_index == 0:
-                score_to_add = 5
+                score_to_add = 7
                 current_zone = 'A'
             
             elif zone_index == 1:
-                score_to_add = 2
+                score_to_add = 3
                 current_zone = 'B'
                 
             elif zone_index == 2:
@@ -322,9 +321,9 @@ def main():
             #Keeps absolute speed constant-ish diagonal vs. straight
             if good_cube.speed_x and good_cube.speed_y:
                 if good_cube.speed_x > 0:
-                    good_cube.speed_x = good_cube.speed_x // 2 + 2
+                    good_cube.speed_x = good_cube.speed_x // 2 + 1
                 else:
-                    good_cube.speed_x = good_cube.speed_x // 2 - 2
+                    good_cube.speed_x = good_cube.speed_x // 2 - 1
                 
                 if good_cube.speed_y > 0:
                     good_cube.speed_y = good_cube.speed_y // 2 + 1
