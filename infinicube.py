@@ -140,7 +140,7 @@ def main():
             if has_died:
                 def save_score(campaign_short_name):
                     
-                    high_score_filename = campaign_short_name + '_' + HIGHSCORE_FILENAME
+                    high_score_filename = HIGHSCORE_FOLDER + campaign_short_name + '_' + HIGHSCORE_FILENAME
                     #Add new score
                     with open(high_score_filename, 'a', newline='') as csvfile:
                         high_score_writer = csv.writer(csvfile, delimiter=' ',
@@ -155,7 +155,12 @@ def main():
                     #Sort scores
                     with open(high_score_filename, newline='') as csvfile:
                         high_score_reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
-                        high_scores = list(high_score_reader)[1:]
+                        
+                        high_scores = list(high_score_reader)
+                        
+                        #removes campaign title if there
+                        high_scores = [high_score for high_score in high_scores if len(high_score) != 1]
+                        
                         high_scores.sort(key=lambda row: int(row[0]), reverse=True)
                     
                     #Write new sorted scores
@@ -171,7 +176,7 @@ def main():
                 play_sound('Loss')
                 
                 if current_level_index == 0 and current_lives == 1:
-                    save_score(HIGHSCORE_FOLDER + campaign_settings[level_name]['CampaignShortName'])
+                    save_score(campaign_settings[level_name]['CampaignShortName'])
                     
                     current_score = 0
                     
@@ -179,7 +184,7 @@ def main():
                     current_lives -= 1
                     
                 if current_lives == 0:
-                    save_score(HIGHSCORE_FOLDER + campaign_settings[level_name]['CampaignShortName'])
+                    save_score(campaign_settings[level_name]['CampaignShortName'])
                     
                     current_level_index = 0
                     current_score = 0
