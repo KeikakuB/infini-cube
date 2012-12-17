@@ -95,6 +95,18 @@ class Cube(object):
             self.rect = self.rect.move(0,height + spawn_buffer)
         elif self.rect.bottom > height + spawn_buffer:
             self.rect = self.rect.move(0,-height - spawn_buffer)
+    
+    def is_off_screen(self):
+        if self.rect.left < -spawn_buffer:
+            return True
+        elif self.rect.right > width + spawn_buffer:
+            return True
+        elif self.rect.top < -spawn_buffer:
+            return True
+        elif self.rect.bottom > height + spawn_buffer:
+            return True
+        
+        return False
 
 class PlayerCube(Cube):
     def __init__(self):
@@ -103,38 +115,54 @@ class PlayerCube(Cube):
         self.rect = self.rect.inflate(-5,-5)
         #Move cube to middle of screen
         self.rect.center = (width//2, height//2)
-
-class HoriCube(Cube):
     
-    def __init__(self, direction, speed):
-        assert direction == LEFT or direction == RIGHT
-        
-        if direction == LEFT:
-            super().__init__(hori_left_filename)
-            spawn_delta = get_spawn_delta(LEFT)
-            self.speed_x = speed
-        
-        elif direction == RIGHT:
-            super().__init__(hori_right_filename)
-            spawn_delta = get_spawn_delta(RIGHT)
-            self.speed_x = -speed
+    def keep_on_screen(self):
+        #Keeps cube on screen
+        if self.rect.left < 0:
+            self.rect = self.rect.move(width,0)
+        elif self.rect.right > width:
+            self.rect = self.rect.move(-width,0)
+        elif self.rect.top < 0:
+            self.rect = self.rect.move(0,height)
+        elif self.rect.bottom > height:
+            self.rect = self.rect.move(0,-height)
+
+class HoriLeftCube(Cube):
+    
+    def __init__(self, speed):
+        super().__init__(hori_left_filename)
+        spawn_delta = get_spawn_delta(LEFT)
+        self.speed_x = speed
         
         self.rect.center = (spawn_delta[0], spawn_delta[1])
 
-class VertiCube(Cube):
-    
-    def __init__(self, direction, speed):
-        if direction == TOP:
-            super().__init__(verti_top_filename)
-            spawn_delta = get_spawn_delta(TOP)
-            self.speed_y = speed
+class HoriRightCube(Cube):
+            
+    def __init__(self, speed):
+        super().__init__(hori_right_filename)
+        spawn_delta = get_spawn_delta(RIGHT)
+        self.speed_x = -speed
         
-        elif direction == BOTTOM:
-            super().__init__(verti_bottom_filename)
-            spawn_delta = get_spawn_delta(BOTTOM)
-            self.speed_y = -speed
+        self.rect.center = (spawn_delta[0], spawn_delta[1])
+        
+class VertiTopCube(Cube):
+    
+    def __init__(self, speed):
+        super().__init__(verti_top_filename)
+        spawn_delta = get_spawn_delta(TOP)
+        self.speed_y = speed
+        
+        self.rect.center = (spawn_delta[0], spawn_delta[1])
+
+class VertiBotCube(Cube):
+    
+    def __init__(self, speed):
+        super().__init__(verti_bottom_filename)
+        spawn_delta = get_spawn_delta(BOTTOM)
+        self.speed_y = -speed
             
         self.rect.center = (spawn_delta[0], spawn_delta[1])
+
 
 class RockCube(Cube):
     
