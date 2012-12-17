@@ -30,6 +30,7 @@ def main():
                   'VertiBotCube','DiaCube','RockCube']
     
     WHITE = (255,255,255)
+    GRAY = (84,84,84)
     
     HIGHSCORE_FOLDER = 'highscores' + os.sep
     HIGHSCORE_FILENAME = 'highscores.txt'
@@ -93,18 +94,18 @@ def main():
     current_lives = max_lives
     
     #Build score zones
-    score_zone_A = pygame.Rect( (0,0), (width//5, height//5))
-    score_zone_B = pygame.Rect( (0,0), (width//2, height//2))
+    score_zone_A = pygame.Rect( (0,0), (int(width//4 * 1.5), int(height//4 * 1.5)))
+    score_zone_B = pygame.Rect( (0,0), (int(width//2 * 1.5), int(height//2 * 1.5)))
     score_zone_C = pygame.Rect( (0,0), (width, height))
     
+    score_zone_names = ['A', 'B', 'C']
     score_zones = [score_zone_A, score_zone_B, score_zone_C]
     
     for score_zone in score_zones:
         score_zone.center = (width//2, height//2)
     
     current_score = 0
-    current_zone = 'A'
-    
+        
     is_campaign_finished = False
     
     current_level_index = -1
@@ -238,7 +239,6 @@ def main():
             
             frame_counter = 0
             
-            zone_display = font.render("Zone: " + current_zone, True, WHITE)
             score_display = font.render("Score: " + str(current_score), True, WHITE)
             round_display = font.render("Level #" + str(current_level_index + 1) + ': ' + level_name, True, WHITE)
             lives_display = font.render("Lives: " + str(current_lives), True, WHITE)
@@ -368,6 +368,13 @@ def main():
 
         screen.fill(black)
         
+        #Display zones
+        for (zone_name, zone_rect) in zip(score_zone_names, score_zones):
+            pygame.draw.rect(screen, GRAY, zone_rect, 1)
+            zone_name_display = font.render(zone_name, True, GRAY)
+            screen.blit(zone_name_display, zone_rect.bottomleft)
+        
+        
         indices_to_delete = []
         for i in range(0, len(bad_cube_list)):
             bad_cube_list[i].move()
@@ -401,10 +408,8 @@ def main():
             del bad_cube_list[index-del_count]
             del_count += 1
         
-        zone_display = font.render("Zone: " + current_zone, True, WHITE)
         score_display = font.render(str(current_score), True, WHITE)
         
-        screen.blit(zone_display, (width - zone_display.get_width(), height-zone_display.get_height()))
         screen.blit(score_display, (width - score_display.get_width(),0 ))    
         screen.blit(round_display, (0,0))
         screen.blit(lives_display, (0,height-lives_display.get_height()))
