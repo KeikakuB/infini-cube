@@ -25,11 +25,8 @@ from thecubes import *
 
 
 def main():
-    LEFT = 'left'
-    RIGHT = 'right'
-    TOP = 'top'
-    BOTTOM = 'bottom'
-    
+    CUBE_TYPES = ['HoriLeftCube','HoriRightCube','VertiTopCube',
+                  'VertiBotCube','DiaCube','RockCube']
     
     def play_sound(sound_name):
         pygame.mixer.music.stop()
@@ -121,6 +118,10 @@ def main():
             
             good_cube_speed = int(round_settings[round_str]['GoodCubeSpeed'])
             
+            if round_settings[round_str]['KeepOnScreen'] == '1':
+                should_keep_on_screen = True
+            else:
+                should_keep_on_screen = False
             
             base_bad_cube_speed = int(round_settings[round_str]['StartSpeed'])
             speed_modifier = 0
@@ -139,10 +140,18 @@ def main():
             max_dia_cubes = int(round_settings[round_str]['MaxDiaCubes'])
             max_rock_cubes = int(round_settings[round_str]['MaxRockCubes'])
             
-            bad_cube_maxes = [max_hori_left_cubes,max_hori_right_cubes,max_verti_top_cubes, max_verti_bottom_cubes,max_dia_cubes, max_rock_cubes]
+            
+            bad_cube_maxes_dict = {CUBE_TYPES[0]: max_hori_left_cubes,
+                                   CUBE_TYPES[1]: max_hori_right_cubes,
+                                   CUBE_TYPES[2]: max_verti_top_cubes,
+                                   CUBE_TYPES[3]: max_verti_bottom_cubes,
+                                   CUBE_TYPES[4]: max_dia_cubes, 
+                                   CUBE_TYPES[5]: max_rock_cubes}
             
             bad_cube_list = []
-            bad_cube_counts = [0, 0, 0, 0, 0, 0]
+            bad_cube_counts_dict = {CUBE_TYPES[0]: 0, CUBE_TYPES[1]: 0,
+                                    CUBE_TYPES[2]: 0, CUBE_TYPES[3]: 0,
+                                    CUBE_TYPES[4]: 0, CUBE_TYPES[5]: 0}
             
             frame_counter = 0
             
@@ -164,29 +173,31 @@ def main():
             is_spawned = False
             
             while not is_spawned:
-                cube_type = random.randint(0, 5)
+                cube_type_index = random.randint(0, 5)
                 
                 new_speed = base_bad_cube_speed + speed_modifier
                 
-                if bad_cube_counts[cube_type] < bad_cube_maxes[cube_type]:
-                    if cube_type == 0:
-                        bad_cube = HoriCube(LEFT, new_speed)
-                        bad_cube_counts[cube_type] += 1
-                    elif cube_type == 1:
-                        bad_cube = HoriCube(RIGHT, new_speed)
-                        bad_cube_counts[cube_type] += 1
-                    elif cube_type == 2:
-                        bad_cube = VertiCube(TOP, new_speed)
-                        bad_cube_counts[cube_type] += 1
-                    elif cube_type == 3:
-                        bad_cube = VertiCube(BOTTOM, new_speed)
-                        bad_cube_counts[cube_type] += 1
-                    elif cube_type == 4:
+                cube_name = CUBE_TYPES[cube_type_index]
+                
+                if bad_cube_counts_dict[cube_name] < bad_cube_maxes_dict[cube_name]:
+                    if cube_name == CUBE_TYPES[0]:
+                        bad_cube = HoriLeftCube(new_speed)
+                        bad_cube_counts_dict[cube_name] += 1
+                    elif cube_name == CUBE_TYPES[1]:
+                        bad_cube = HoriRightCube(new_speed)
+                        bad_cube_counts_dict[cube_name] += 1
+                    elif cube_name == CUBE_TYPES[2]:
+                        bad_cube = VertiTopCube(new_speed)
+                        bad_cube_counts_dict[cube_name] += 1
+                    elif cube_name == CUBE_TYPES[3]:
+                        bad_cube = VertiBotCube(new_speed)
+                        bad_cube_counts_dict[cube_name] += 1
+                    elif cube_name == CUBE_TYPES[4]:
                         bad_cube = DiaCube(new_speed)
-                        bad_cube_counts[cube_type] += 1
-                    elif cube_type == 5:
+                        bad_cube_counts_dict[cube_name] += 1
+                    elif cube_name == CUBE_TYPES[5]:
                         bad_cube = RockCube()
-                        bad_cube_counts[cube_type] += 1
+                        bad_cube_counts_dict[cube_name] += 1
                     
                     
                     if not good_cube.rect.inflate(safety_zone_x, safety_zone_y).colliderect(bad_cube.rect):
@@ -288,12 +299,39 @@ def main():
 
         screen.fill(black)
         
-        for bad_cube in bad_cube_list:
-            bad_cube.move()
-            bad_cube.keep_on_screen()
+        indices_to_delete = []
+        for i in range(0, len(bad_cube_list)):
+            bad_cube_list[i].move()
             
-            screen.blit(bad_cube.surface, bad_cube.rect)
+            if bad_cube_list[i].is_off_screen():
+                
+                if should_keep_on_screen:
+                    bad_cube_list[i].keep_on_screen()
+                else:
+                    indices_to_delete.append(i)
+            
+            screen.blit(bad_cube_list[i].surface, bad_cube_list[i].rect)
         
+        del_count = 0
+        for index in indices_to_delete:
+            cube_to_delete = bad_cube_list[index-del_count]
+            
+            if isinstance(cube_to_delete, HoriLeftCube):
+                bad_cube_counts_dict[CUBE_TYPES[0]] -= 1
+            elif isinstance(cube_to_delete, HoriRightCube):
+                bad_cube_counts_dict[CUBE_TYPES[1]] -= 1
+            elif isinstance(cube_to_delete, VertiTopCube):
+                bad_cube_counts_dict[CUBE_TYPES[2]] -= 1
+            elif isinstance(cube_to_delete, VertiBotCube):
+                bad_cube_counts_dict[CUBE_TYPES[3]] -= 1
+            elif isinstance(cube_to_delete, DiaCube):
+                bad_cube_counts_dict[CUBE_TYPES[4]] -= 1
+            elif isinstance(cube_to_delete, RockCube):
+                bad_cube_counts_dict[CUBE_TYPES[5]] -= 1
+            
+            del bad_cube_list[index-del_count]
+            del_count += 1
+
         screen.blit(round_display, (4,2))
         screen.blit(lives_display, (4,height-20))
             
