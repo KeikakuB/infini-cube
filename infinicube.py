@@ -23,12 +23,15 @@ import configparser
 
 from thecubes import PlayerCube, HoriLeftCube, HoriRightCube, VertiTopCube, VertiBotCube, DiaCube, RockCube
 
+import csv
 
 def main():
     CUBE_TYPES = ['HoriLeftCube','HoriRightCube','VertiTopCube',
                   'VertiBotCube','DiaCube','RockCube']
     
     WHITE = (255,255,255)
+    
+    HIGHSCORE_FILENAME = 'highscores.txt'
     
     def play_sound(sound_name):
         pygame.mixer.music.stop()
@@ -80,12 +83,13 @@ def main():
     game_clock = pygame.time.Clock()
     
     
-    round_settings = configparser.ConfigParser()
-    round_settings.read('config' + os.sep + 'rounds.ini')
+    campaign_settings = configparser.ConfigParser()
+    campaign_settings.read('config' + os.sep + 'campaign.ini')
+    
+    levels = campaign_settings.sections()
     
     max_lives = int(settings['gameplay']['NumberOfLives'])
     current_lives = max_lives
-    
     
     #Build score zones
     score_zone_A = pygame.Rect( (0,0), (width//5, height//5))
@@ -100,11 +104,12 @@ def main():
     current_score = 0
     current_zone = 'A'
     
-    current_round = -1
+    is_campaign_finished = False
+    
+    current_level_index = -1
     is_new_round = True
     has_died = False
     while True:
-        
         zone_index = good_cube.rect.collidelist(score_zones)
         if zone_index != -1:            
             if zone_index == 0:
@@ -122,59 +127,93 @@ def main():
             current_score += score_to_add
         
         if is_new_round or has_died:            
-            if not has_died and current_round != -1:
+            if not has_died and current_level_index != -1:
                 play_sound('NextRound')
                 play_sound('NextRound')
-                current_round += 1
+                current_level_index += 1
                 current_lives += 1 
                 
-            if current_round == -1:
-                current_round += 1                     
+            if current_level_index == -1:
+                current_level_index += 1                     
                 
             if has_died:
+                def save_score():
+                    #Add new score
+                    with open(HIGHSCORE_FILENAME, 'a', newline='') as csvfile:
+                        high_score_writer = csv.writer(csvfile, delimiter=' ',
+                                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                        
+                        score_str = str(current_score)
+                        campaign_str = campaign_settings[level_name]['CampaignName']
+                        level_str = "Level #" + str(current_level_index + 1) + " - " + level_name
+                        
+                        high_score = [score_str, campaign_str, level_str]
+                        high_score_writer.writerow(high_score)
+                    
+                    #Sort scores
+                    with open(HIGHSCORE_FILENAME, newline='') as csvfile:
+                        high_score_reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
+                        high_scores = list(high_score_reader)
+                        high_scores.sort(key=lambda row: int(row[0]), reverse=True)
+                    
+                    #Write new sorted scores
+                    with open(HIGHSCORE_FILENAME, 'w', newline='') as csvfile:
+                        high_score_writer = csv.writer(csvfile, delimiter=' ',
+                                        quotechar='|', quoting=csv.QUOTE_MINIMAL)
+                        
+                        for high_score in high_scores:
+                            high_score_writer.writerow(high_score)
+                
                 play_sound('Loss')
                 play_sound('Loss')
                 
-                if current_round == 0 and current_lives == 1:
+                if current_level_index == 0 and current_lives == 1:
+                    save_score()
+                    
                     current_score = 0
                     
-                if current_round != 0:
+                if current_level_index != 0:
                     current_lives -= 1
                     
                 if current_lives == 0:
-                    current_round = 0
+                    save_score()
+                    
+                    current_level_index = 0
                     current_score = 0
                     current_lives = max_lives
             
-            round_str = 'round' + str(current_round)
             
-            round_name = round_settings[round_str]['Name']
+            #Win Condition (TODO: Write high score)
+            if current_level_index > len(levels)-1:
+                sys.exit(0)
+            
+            level_name = levels[current_level_index]
             
             good_cube = PlayerCube()
             
-            good_cube_speed = int(round_settings[round_str]['GoodCubeSpeed'])
+            good_cube_speed = int(campaign_settings[level_name]['GoodCubeSpeed'])
             
-            if round_settings[round_str]['KeepOnScreen'] == '1':
+            if campaign_settings[level_name]['KeepOnScreen'] == '1':
                 should_keep_on_screen = True
             else:
                 should_keep_on_screen = False
             
-            base_bad_cube_speed = int(round_settings[round_str]['StartSpeed'])
+            base_bad_cube_speed = int(campaign_settings[level_name]['StartSpeed'])
             speed_modifier = 0
             
-            max_speed_modifier = int(round_settings[round_str]['SpeedLevelsPerRound'])
-            seconds_per_level = float(round_settings[round_str]['SecondsPerLevel'])
+            max_speed_modifier = int(campaign_settings[level_name]['SpeedLevelsPerRound'])
+            seconds_per_level = float(campaign_settings[level_name]['SecondsPerLevel'])
             
-            bad_cube_spawn_rate = float(round_settings[round_str]['SpawnRate'])
+            bad_cube_spawn_rate = float(campaign_settings[level_name]['SpawnRate'])
             
-            max_hori_left_cubes = int(round_settings[round_str]['MaxHoriLCubes'])
-            max_hori_right_cubes = int(round_settings[round_str]['MaxHoriRCubes'])
+            max_hori_left_cubes = int(campaign_settings[level_name]['MaxHoriLCubes'])
+            max_hori_right_cubes = int(campaign_settings[level_name]['MaxHoriRCubes'])
             
-            max_verti_top_cubes = int(round_settings[round_str]['MaxVertiTCubes'])
-            max_verti_bottom_cubes = int(round_settings[round_str]['MaxVertiBCubes'])
+            max_verti_top_cubes = int(campaign_settings[level_name]['MaxVertiTCubes'])
+            max_verti_bottom_cubes = int(campaign_settings[level_name]['MaxVertiBCubes'])
             
-            max_dia_cubes = int(round_settings[round_str]['MaxDiaCubes'])
-            max_rock_cubes = int(round_settings[round_str]['MaxRockCubes'])
+            max_dia_cubes = int(campaign_settings[level_name]['MaxDiaCubes'])
+            max_rock_cubes = int(campaign_settings[level_name]['MaxRockCubes'])
             
             
             bad_cube_maxes_dict = {CUBE_TYPES[0]: max_hori_left_cubes,
@@ -193,14 +232,16 @@ def main():
             
             zone_display = font.render("Zone: " + current_zone, True, WHITE)
             score_display = font.render("Score: " + str(current_score), True, WHITE)
-            round_display = font.render("Round #" + str(current_round) + ': ' + round_name, True, WHITE)
+            round_display = font.render("Level #" + str(current_level_index + 1) + ': ' + level_name, True, WHITE)
             lives_display = font.render("Lives: " + str(current_lives), True, WHITE)
             
+            if is_campaign_finished:
+                sys.exit(0)
+        
             is_new_round = False
             has_died = False
         
-        
-        frame_counter += 1
+        frame_counter += 1        
         
         if speed_modifier == max_speed_modifier:
             is_new_round = True
@@ -297,7 +338,7 @@ def main():
                     is_skip_round = True
                 
                 if is_skip_round:
-                    (current_round, is_new_round, has_died, current_lives) = set_round(round_num)
+                    (current_level_index, is_new_round, has_died, current_lives) = set_round(round_num)
             
             
             #Controls movement
