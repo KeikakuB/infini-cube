@@ -35,4 +35,4 @@ nosetests.xml
 .pydevproject
 
 # Personal
-highscores.txt
+*highscores.txt

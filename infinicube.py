@@ -137,30 +137,32 @@ def main():
                 current_level_index += 1                     
                 
             if has_died:
-                def save_score():
+                def save_score(campaign_short_name):
+                    
+                    high_score_filename = campaign_short_name + '_' + HIGHSCORE_FILENAME
                     #Add new score
-                    with open(HIGHSCORE_FILENAME, 'a', newline='') as csvfile:
+                    with open(high_score_filename, 'a', newline='') as csvfile:
                         high_score_writer = csv.writer(csvfile, delimiter=' ',
                                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
                         
                         score_str = str(current_score)
-                        campaign_str = campaign_settings[level_name]['CampaignName']
                         level_str = "Level #" + str(current_level_index + 1) + " - " + level_name
                         
-                        high_score = [score_str, campaign_str, level_str]
+                        high_score = [score_str, level_str]
                         high_score_writer.writerow(high_score)
                     
                     #Sort scores
-                    with open(HIGHSCORE_FILENAME, newline='') as csvfile:
+                    with open(high_score_filename, newline='') as csvfile:
                         high_score_reader = csv.reader(csvfile, delimiter=' ', quotechar='|')
-                        high_scores = list(high_score_reader)
+                        high_scores = list(high_score_reader)[1:]
                         high_scores.sort(key=lambda row: int(row[0]), reverse=True)
                     
                     #Write new sorted scores
-                    with open(HIGHSCORE_FILENAME, 'w', newline='') as csvfile:
+                    with open(high_score_filename, 'w', newline='') as csvfile:
                         high_score_writer = csv.writer(csvfile, delimiter=' ',
                                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
                         
+                        high_score_writer.writerow([campaign_settings[level_name]['CampaignName']])
                         for high_score in high_scores:
                             high_score_writer.writerow(high_score)
                 
@@ -168,7 +170,7 @@ def main():
                 play_sound('Loss')
                 
                 if current_level_index == 0 and current_lives == 1:
-                    save_score()
+                    save_score(campaign_settings[level_name]['CampaignShortName'])
                     
                     current_score = 0
                     
@@ -176,7 +178,7 @@ def main():
                     current_lives -= 1
                     
                 if current_lives == 0:
-                    save_score()
+                    save_score(campaign_settings[level_name]['CampaignShortName'])
                     
                     current_level_index = 0
                     current_score = 0
