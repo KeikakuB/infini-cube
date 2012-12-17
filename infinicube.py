@@ -28,6 +28,8 @@ def main():
     CUBE_TYPES = ['HoriLeftCube','HoriRightCube','VertiTopCube',
                   'VertiBotCube','DiaCube','RockCube']
     
+    WHITE = (255,255,255)
+    
     def play_sound(sound_name):
         pygame.mixer.music.stop()
         
@@ -84,10 +86,41 @@ def main():
     max_lives = int(settings['gameplay']['NumberOfLives'])
     current_lives = max_lives
     
+    
+    #Build score zones
+    score_zone_A = pygame.Rect( (0,0), (width//5, height//5))
+    score_zone_B = pygame.Rect( (0,0), (width//2, height//2))
+    score_zone_C = pygame.Rect( (0,0), (width, height))
+    
+    score_zones = [score_zone_A, score_zone_B, score_zone_C]
+    
+    for score_zone in score_zones:
+        score_zone.center = (width//2, height//2)
+    
+    current_score = 0
+    current_zone = 'A'
+    
     current_round = -1
     is_new_round = True
     has_died = False
     while True:
+        
+        if good_cube.rect.collidelist(score_zones) != -1:
+            zone_index = good_cube.rect.collidelist(score_zones)
+            
+            if zone_index == 0:
+                score_to_add = 5
+                current_zone = 'A'
+            
+            elif zone_index == 1:
+                score_to_add = 2
+                current_zone = 'B'
+                
+            elif zone_index == 2:
+                score_to_add = 1
+                current_zone = 'C'
+            
+            current_score += score_to_add
         
         if is_new_round or has_died:            
             if not has_died and current_round != -1:
@@ -103,11 +136,15 @@ def main():
                 play_sound('Loss')
                 play_sound('Loss')
                 
+                if current_round == 0 and current_lives == 1:
+                    current_score = 0
+                    
                 if current_round != 0:
                     current_lives -= 1
-                
+                    
                 if current_lives == 0:
                     current_round = 0
+                    current_score = 0
                     current_lives = max_lives
             
             round_str = 'round' + str(current_round)
@@ -155,8 +192,10 @@ def main():
             
             frame_counter = 0
             
-            round_display = font.render("Round #" + str(current_round) + ': ' + round_name, True, (255, 255, 255))
-            lives_display = font.render("Lives: " + str(current_lives), True, (255, 255, 255))
+            zone_display = font.render("Zone: " + current_zone, True, WHITE)
+            score_display = font.render("Score: " + str(current_score), True, WHITE)
+            round_display = font.render("Round #" + str(current_round) + ': ' + round_name, True, WHITE)
+            lives_display = font.render("Lives: " + str(current_lives), True, WHITE)
             
             is_new_round = False
             has_died = False
@@ -331,9 +370,14 @@ def main():
             
             del bad_cube_list[index-del_count]
             del_count += 1
-
-        screen.blit(round_display, (4,2))
-        screen.blit(lives_display, (4,height-20))
+        
+        zone_display = font.render("Zone: " + current_zone, True, WHITE)
+        score_display = font.render(str(current_score), True, WHITE)
+        
+        screen.blit(zone_display, (width - zone_display.get_width(), height-zone_display.get_height()))
+        screen.blit(score_display, (width - score_display.get_width(),0 ))    
+        screen.blit(round_display, (0,0))
+        screen.blit(lives_display, (0,height-lives_display.get_height()))
             
         screen.blit(good_cube.surface, good_cube.rect)        
         
