@@ -303,44 +303,14 @@ def main():
             
             #DEBUG: Fast Round Switch
             if cheats_enabled:
-                def set_round(round_number):
-                    return (round_number, True, True, 999)
+                def change_round(round_number, by_how_much):
+                    return (round_number + by_how_much, True, True, 999)
                 
-                round_num = -1
-                is_skip_round = False
+                if pressed_keys[pygame.K_PAGEUP]:
+                    (current_level_index, is_new_round, has_died, current_lives) = change_round(current_level_index, 1)
+                elif pressed_keys[pygame.K_PAGEDOWN]:
+                    (current_level_index, is_new_round, has_died, current_lives) = change_round(current_level_index, -1)
                 
-                if pressed_keys[pygame.K_0]:
-                    round_num = 0
-                    is_skip_round = True
-                elif pressed_keys[pygame.K_1]:
-                    round_num = 1
-                    is_skip_round = True
-                elif pressed_keys[pygame.K_2]:
-                    round_num = 2
-                    is_skip_round = True
-                elif pressed_keys[pygame.K_3]:
-                    round_num = 3
-                    is_skip_round = True
-                elif pressed_keys[pygame.K_4]:
-                    round_num = 4
-                    is_skip_round = True
-                elif pressed_keys[pygame.K_5]:
-                    round_num = 5
-                    is_skip_round = True
-                elif pressed_keys[pygame.K_6]:
-                    round_num = 6
-                    is_skip_round = True
-                elif pressed_keys[pygame.K_7]:
-                    round_num = 7
-                    is_skip_round = True
-                elif pressed_keys[pygame.K_8]:
-                    round_num = 8
-                    is_skip_round = True
-                
-                if is_skip_round:
-                    (current_level_index, is_new_round, has_died, current_lives) = set_round(round_num)
-            
-            
             #Controls movement
             if pressed_keys[pygame.K_LEFT]:
                 good_cube.speed_x = -good_cube_speed
