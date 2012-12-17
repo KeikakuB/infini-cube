@@ -34,11 +34,11 @@ def main():
     def play_sound(sound_name):
         pygame.mixer.music.stop()
         
-        loss_tone = pygame.mixer.Sound(sound_folder + settings['sound'][sound_name])
-        loss_tone.set_volume(float(settings['sound']['Volume']))
-        loss_tone.play()
+        sound = pygame.mixer.Sound(sound_folder + settings['sound'][sound_name])
+        sound.set_volume(float(settings['sound']['Volume']))
+        sound.play()
         
-        pygame.time.wait(int(loss_tone.get_length() * 1000))
+        pygame.time.wait(int(sound.get_length() * 1000))
         
         pygame.mixer.music.rewind()
         pygame.mixer.music.play(-1)
@@ -95,6 +95,7 @@ def main():
         if is_new_round or has_died:            
             if not has_died and current_round != -1:
                 play_sound('NextRound')
+                play_sound('NextRound')
                 current_round += 1
                 current_lives += 1 
                 
@@ -102,6 +103,7 @@ def main():
                 current_round += 1                     
                 
             if has_died:
+                play_sound('Loss')
                 play_sound('Loss')
                 
                 if current_round != 0:
