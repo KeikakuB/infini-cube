@@ -319,16 +319,18 @@ def main():
                 good_cube.speed_y = 0
             
             #Keeps absolute speed constant-ish diagonal vs. straight
+            #TODO: Should be using Pythagor (sp?) theorem. (Only works well for
+            # multiples of 4 now
             if good_cube.speed_x and good_cube.speed_y:
                 if good_cube.speed_x > 0:
-                    good_cube.speed_x = good_cube.speed_x // 2 + 1
+                    good_cube.speed_x = good_cube.speed_x // 2 + good_cube.speed_x // 4
                 else:
-                    good_cube.speed_x = good_cube.speed_x // 2 - 1
+                    good_cube.speed_x = good_cube.speed_x // 2 - ((-good_cube.speed_x) // 4)
                 
                 if good_cube.speed_y > 0:
-                    good_cube.speed_y = good_cube.speed_y // 2 + 1
+                    good_cube.speed_y = good_cube.speed_y // 2 + good_cube.speed_y // 4
                 else:
-                    good_cube.speed_y = good_cube.speed_y // 2 - 1
+                    good_cube.speed_y = good_cube.speed_y // 2 - ((-good_cube.speed_y) // 4)
         
         good_cube.move()
         
