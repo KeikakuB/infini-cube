@@ -85,11 +85,11 @@ def main():
     
     
     campaign_settings = configparser.ConfigParser()
-    campaign_settings.read('config' + os.sep + 'campaign.ini')
+    campaign_settings.read('campaigns' + os.sep + settings['gameplay']['CampaignFilename'])
     
     levels = campaign_settings.sections()
     
-    max_lives = int(settings['gameplay']['NumberOfLives'])
+    max_lives = int(campaign_settings['DEFAULT']['NumberOfLives'])
     current_lives = max_lives
     
     #Build score zones
@@ -175,7 +175,7 @@ def main():
                 play_sound('Loss')
                 play_sound('Loss')
                 
-                if current_level_index == 0 and current_lives == 1:
+                if current_level_index == 0 and current_lives == max_lives:
                     save_score(campaign_settings[level_name]['CampaignShortName'])
                     
                     current_score = 0
@@ -256,6 +256,12 @@ def main():
             
         #Creates bad cubes
         if frame_counter % seconds_to_frames(frame_rate, bad_cube_spawn_rate) == 0:
+            def is_all_maxed_out():
+                for cube_type in CUBE_TYPES:
+                    if bad_cube_counts_dict[cube_type] < bad_cube_maxes_dict[cube_type]:
+                        return False
+                    
+                return True
             
             is_spawned = False
             
@@ -266,7 +272,11 @@ def main():
                 
                 cube_name = CUBE_TYPES[cube_type_index]
                 
-                if bad_cube_counts_dict[cube_name] < bad_cube_maxes_dict[cube_name]:
+                #Do nothing if every cube is maxed out
+                if is_all_maxed_out():
+                    is_spawned = True
+                
+                elif bad_cube_counts_dict[cube_name] < bad_cube_maxes_dict[cube_name]:
                     if cube_name == CUBE_TYPES[0]:
                         bad_cube = HoriLeftCube(new_speed)
                         bad_cube_counts_dict[cube_name] += 1
