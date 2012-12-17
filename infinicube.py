@@ -116,15 +116,12 @@ def main():
         if zone_index != -1:            
             if zone_index == 0:
                 score_to_add = 7
-                current_zone = 'A'
             
             elif zone_index == 1:
                 score_to_add = 3
-                current_zone = 'B'
                 
             elif zone_index == 2:
                 score_to_add = 1
-                current_zone = 'C'
             
             current_score += score_to_add
         
