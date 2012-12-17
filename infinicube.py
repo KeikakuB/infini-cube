@@ -31,6 +31,7 @@ def main():
     
     WHITE = (255,255,255)
     
+    HIGHSCORE_FOLDER = 'highscores' + os.sep
     HIGHSCORE_FILENAME = 'highscores.txt'
     
     def play_sound(sound_name):
@@ -170,7 +171,7 @@ def main():
                 play_sound('Loss')
                 
                 if current_level_index == 0 and current_lives == 1:
-                    save_score(campaign_settings[level_name]['CampaignShortName'])
+                    save_score(HIGHSCORE_FOLDER + campaign_settings[level_name]['CampaignShortName'])
                     
                     current_score = 0
                     
@@ -178,7 +179,7 @@ def main():
                     current_lives -= 1
                     
                 if current_lives == 0:
-                    save_score(campaign_settings[level_name]['CampaignShortName'])
+                    save_score(HIGHSCORE_FOLDER + campaign_settings[level_name]['CampaignShortName'])
                     
                     current_level_index = 0
                     current_score = 0
