@@ -26,19 +26,20 @@ from thecubes import PlayerCube, HoriLeftCube, HoriRightCube, VertiTopCube, Vert
 import csv
 
 def main():
-    def play_sound(sound_name):
-        pygame.mixer.music.stop()
-        
-        sound_folder = settings['sound']['FolderName'] + os.sep
-        
-        sound = pygame.mixer.Sound(sound_folder + settings['sound'][sound_name])
-        sound.set_volume(float(settings['sound']['Volume']))
-        sound.play()
-        
-        pygame.time.wait(int(sound.get_length() * 1000))
-        
-        pygame.mixer.music.rewind()
-        pygame.mixer.music.play(-1)
+    def play_sound(game_config, sound_name):
+        if not game_config[SKIP_SOUNDS]:
+            pygame.mixer.music.stop()
+            
+            sound_folder = settings['sound']['FolderName'] + os.sep
+            
+            sound = pygame.mixer.Sound(sound_folder + settings['sound'][sound_name])
+            sound.set_volume(float(settings['sound']['Volume']))
+            sound.play()
+            
+            pygame.time.wait(int(sound.get_length() * 1000))
+            
+            pygame.mixer.music.rewind()
+            pygame.mixer.music.play(-1)
     
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
         
@@ -100,6 +101,7 @@ def main():
     FONT = 'font'
     
     CHEATS_ENABLED = 'cheats_enabled'
+    SKIP_SOUNDS = 'skip_sounds'
     
     SAFETY_ZONE_X = 'safety_zone_x'
     SAFETY_ZONE_Y = 'safety_zone_y'
@@ -109,14 +111,19 @@ def main():
     else:
         game_config[CHEATS_ENABLED] = False
     
+    if settings['sound']['SkipSounds'] == '1':
+        game_config[SKIP_SOUNDS] = True
+    else:
+        game_config[SKIP_SOUNDS] = False
+    
     game_config[WIDTH] = int(settings['graphics']['Width'])
     game_config[HEIGHT] = int(settings['graphics']['Height'])
-    
     
     game_config[FRAME_RATE] = int(settings['gameplay']['FrameRate'])
     
     game_config[SAFETY_ZONE_X] = int(settings['gameplay']['SafetyZoneX'])
     game_config[SAFETY_ZONE_Y] = int(settings['gameplay']['SafetyZoneY'])
+    
     
     pygame.init()
     
@@ -177,8 +184,8 @@ def main():
         
         if game_state[IS_NEW_ROUND] or game_state[HAS_DIED]:            
             if not game_state[HAS_DIED] and game_state[CURRENT_LEVEL_INDEX] != -1:
-                play_sound('NextRound')
-                play_sound('NextRound')
+                play_sound(game_config, 'NextRound')
+                play_sound(game_config, 'NextRound')
                 game_state[CURRENT_LEVEL_INDEX] += 1
                 game_state[CURRENT_LIVES] += 1 
                 
@@ -220,8 +227,8 @@ def main():
                         for high_score in high_scores:
                             high_score_writer.writerow(high_score)
                 
-                play_sound('Loss')
-                play_sound('Loss')
+                play_sound(game_config, 'Loss')
+                play_sound(game_config, 'Loss')
                 
                 if game_state[CURRENT_LEVEL_INDEX] == 0 and game_state[CURRENT_LIVES] == game_state[MAX_LIVES]:
                     save_score(game_state, campaign_settings[game_state[LEVEL_NAME]]['CampaignShortName'])
