@@ -21,7 +21,8 @@ import logging
 import random
 import configparser
 
-from thecubes import PlayerCube, HoriLeftCube, HoriRightCube, VertiTopCube, VertiBotCube, DiaCube, RockCube
+from thecubes import PlayerCube, HoriLeftCube, HoriRightCube, VertiTopCube
+from thecubes import VertiBotCube, DiaCube, RockCube
 
 import csv
 
@@ -85,6 +86,9 @@ SKIP_SOUNDS = 'skip_sounds'
 SAFETY_ZONE_X = 'safety_zone_x'
 SAFETY_ZONE_Y = 'safety_zone_y'
 
+def seconds_to_frames(frame_rate, number_of_seconds):
+    """Converts number_of_seconds to the equivalent number of frames."""
+    return int(number_of_seconds * frame_rate)
 
 def play_sound(settings, sound_name, repeat=1):
     """Stop the game loop and play a sound a certain number of times."""
@@ -106,11 +110,27 @@ def play_sound(settings, sound_name, repeat=1):
     pygame.mixer.music.rewind()
     pygame.mixer.music.play(-1)
 
+def add_points_to_score(game_state):
+    zone_rects = [zone_rect for (_, zone_rect) in game_state[SCORE_ZONES]]
+    zone_index = game_state[PLAYER_CUBE].rect.collidelist(zone_rects)
+    if zone_index != -1:            
+        if zone_index == 0:
+            score_to_add = 7
+        
+        elif zone_index == 1:
+            score_to_add = 3
+            
+        elif zone_index == 2:
+            score_to_add = 1
+        
+        game_state[CURRENT_SCORE] += score_to_add
+        
 def save_score(game_state, campaign_name, campaign_short_name):
     """Saves player's score to a .txt file according to the name and
     short name of the campaign being played."""
     
-    high_score_filename = HIGHSCORE_FOLDER + campaign_short_name + '_' + HIGHSCORE_FILENAME
+    high_score_filename = HIGHSCORE_FOLDER + campaign_short_name
+    high_score_filename +=  '_' + HIGHSCORE_FILENAME
     
     #Add new score
     with open(high_score_filename, 'a', newline='') as csvfile:
@@ -118,7 +138,9 @@ def save_score(game_state, campaign_name, campaign_short_name):
                         quotechar='|', quoting=csv.QUOTE_MINIMAL)
         
         score_str = str(game_state[CURRENT_SCORE])
-        level_str = "Level #" + str(game_state[CURRENT_LEVEL_INDEX] + 1) + " - " + game_state[LEVEL_NAME]
+        
+        level_str = "Level #" + str(game_state[CURRENT_LEVEL_INDEX] + 1) 
+        level_str += " - " + game_state[LEVEL_NAME]
         
         high_score = [score_str, level_str]
         high_score_writer.writerow(high_score)
@@ -130,7 +152,7 @@ def save_score(game_state, campaign_name, campaign_short_name):
         high_scores = list(high_score_reader)
         
         #removes campaign title if there
-        high_scores = [high_score for high_score in high_scores if len(high_score) != 1]
+        high_scores = [score for score in high_scores if len(score) != 1]
         
         high_scores.sort(key=lambda row: int(row[0]), reverse=True)
     
@@ -152,19 +174,177 @@ def is_all_maxed_out(bad_cube_counts, bad_cube_maximums):
         
     return True
 
+def change_level(game_state, game_config, settings, campaign_settings):     
+    if not game_state[HAS_DIED] and game_state[CURRENT_LEVEL_INDEX] != -1:
+        if not game_config[SKIP_SOUNDS]:
+            play_sound(settings, 'NextRound', repeat=1)
+        
+        game_state[CURRENT_LEVEL_INDEX] += 1
+        game_state[CURRENT_LIVES] += 1 
+        
+    if game_state[CURRENT_LEVEL_INDEX] == -1:
+        game_state[CURRENT_LEVEL_INDEX] += 1                     
+        
+    if game_state[HAS_DIED]: 
+        if not game_config[SKIP_SOUNDS]:               
+            play_sound(settings, 'Loss', repeat=1)
+        
+        if game_state[CURRENT_LEVEL_INDEX] == 0 and game_state[CURRENT_LIVES] == game_state[MAX_LIVES]:
+            save_score(game_state, 
+                       campaign_settings[game_state[LEVEL_NAME]]['CampaignName'],
+                       campaign_settings[game_state[LEVEL_NAME]]['CampaignShortName'])
+            
+            game_state[CURRENT_SCORE] = 0
+            
+        if game_state[CURRENT_LEVEL_INDEX] != 0:
+            game_state[CURRENT_LIVES] -= 1
+            
+        if game_state[CURRENT_LIVES] == 0:
+            save_score(game_state, 
+                       campaign_settings[game_state[LEVEL_NAME]]['CampaignName'], 
+                       campaign_settings[game_state[LEVEL_NAME]]['CampaignShortName'])
+            
+            game_state[CURRENT_LEVEL_INDEX] = 0
+            game_state[CURRENT_SCORE] = 0
+            game_state[CURRENT_LIVES] = game_state[MAX_LIVES]
+    
+    if game_state[CURRENT_LEVEL_INDEX] > len(game_state[LEVELS])-1:
+        save_score(game_state, 
+                   campaign_settings[game_state[LEVEL_NAME]]['CampaignName'],
+                   campaign_settings[game_state[LEVELS][game_state[CURRENT_LEVEL_INDEX]-1]]['CampaignShortName'])
+        sys.exit(0)
+    
+    game_state[LEVELS] = campaign_settings.sections()
+    game_state[LEVEL_NAME] = game_state[LEVELS][game_state[CURRENT_LEVEL_INDEX]]
+        
+    game_state[SPEED_MODIFIER] = 0
+    game_state[BAD_CUBES] = []
+    game_state[FRAME_COUNTER] = 0
+    game_state[IS_NEW_ROUND] = False
+    game_state[HAS_DIED] = False
+    
+    game_state[PLAYER_CUBE] = PlayerCube()
+    
+    game_state[PLAYER_CUBE_SPEED] = int(campaign_settings[game_state[LEVEL_NAME]]['GoodCubeSpeed'])
+    
+    if campaign_settings[game_state[LEVEL_NAME]]['KeepOnScreen'] == '1':
+        game_state[SHOULD_KEEP_ON_SCREEN] = True
+    else:
+        game_state[SHOULD_KEEP_ON_SCREEN] = False
+    
+    game_state[BASE_BAD_CUBE_SPEED] = int(campaign_settings[game_state[LEVEL_NAME]]['StartSpeed'])
+    game_state[MAX_SPEED_MODIFIER] = int(campaign_settings[game_state[LEVEL_NAME]]['SpeedLevelsPerRound'])
+    game_state[SECONDS_PER_LEVEL] = float(campaign_settings[game_state[LEVEL_NAME]]['SecondsPerLevel'])
+    game_state[BAD_CUBE_SPAWN_RATE] = float(campaign_settings[game_state[LEVEL_NAME]]['SpawnRate'])
+    
+    max_hori_left_cubes = int(campaign_settings[game_state[LEVEL_NAME]]['MaxHoriLCubes'])
+    max_hori_right_cubes = int(campaign_settings[game_state[LEVEL_NAME]]['MaxHoriRCubes'])
+    
+    max_verti_top_cubes = int(campaign_settings[game_state[LEVEL_NAME]]['MaxVertiTCubes'])
+    max_verti_bottom_cubes = int(campaign_settings[game_state[LEVEL_NAME]]['MaxVertiBCubes'])
+    
+    max_dia_cubes = int(campaign_settings[game_state[LEVEL_NAME]]['MaxDiaCubes'])
+    max_rock_cubes = int(campaign_settings[game_state[LEVEL_NAME]]['MaxRockCubes'])
+    
+    game_state[BAD_CUBE_MAXIMUMS] = {CUBE_TYPES[0]: max_hori_left_cubes,
+                                     CUBE_TYPES[1]: max_hori_right_cubes,
+                                     CUBE_TYPES[2]: max_verti_top_cubes,
+                                     CUBE_TYPES[3]: max_verti_bottom_cubes,
+                                     CUBE_TYPES[4]: max_dia_cubes, 
+                                     CUBE_TYPES[5]: max_rock_cubes}
+    
+    game_state[BAD_CUBE_COUNTS] =  {CUBE_TYPES[0]: 0, CUBE_TYPES[1]: 0,
+                                    CUBE_TYPES[2]: 0, CUBE_TYPES[3]: 0,
+                                    CUBE_TYPES[4]: 0, CUBE_TYPES[5]: 0}
+
+def spawn_new_bad_cube(game_state, game_config):
+    is_spawned = False    
+    while not is_spawned:
+        cube_type_index = random.randint(0, 5)
+        
+        new_speed = game_state[BASE_BAD_CUBE_SPEED] + game_state[SPEED_MODIFIER]
+        
+        cube_name = CUBE_TYPES[cube_type_index]
+        
+        #Do nothing if every cube is maxed out
+        if is_all_maxed_out(game_state[BAD_CUBE_COUNTS], game_state[BAD_CUBE_MAXIMUMS]):
+            is_spawned = True
+        
+        elif game_state[BAD_CUBE_COUNTS][cube_name] < game_state[BAD_CUBE_MAXIMUMS][cube_name]:
+            def get_new_bad_cube(bad_cube_counts):
+                if cube_name == CUBE_TYPES[0]:
+                    bad_cube = HoriLeftCube(new_speed)
+                    bad_cube_counts[cube_name] += 1
+                elif cube_name == CUBE_TYPES[1]:
+                    bad_cube = HoriRightCube(new_speed)
+                    bad_cube_counts[cube_name] += 1
+                elif cube_name == CUBE_TYPES[2]:
+                    bad_cube = VertiTopCube(new_speed)
+                    bad_cube_counts[cube_name] += 1
+                elif cube_name == CUBE_TYPES[3]:
+                    bad_cube = VertiBotCube(new_speed)
+                    bad_cube_counts[cube_name] += 1
+                elif cube_name == CUBE_TYPES[4]:
+                    bad_cube = DiaCube(new_speed)
+                    bad_cube_counts[cube_name] += 1
+                elif cube_name == CUBE_TYPES[5]:
+                    bad_cube = RockCube()
+                    bad_cube_counts[cube_name] += 1
+                    
+                return bad_cube
+            
+            bad_cube = get_new_bad_cube(game_state[BAD_CUBE_COUNTS])
+            
+            if not game_state[PLAYER_CUBE].rect.inflate(game_config[SAFETY_ZONE_X],
+                                                        game_config[SAFETY_ZONE_Y]).colliderect(bad_cube.rect):
+                game_state[BAD_CUBES].append(bad_cube)
+                is_spawned = True
+
+
 def has_player_died(player_cube, bad_cubes):
-    """Determines whether the player cube has collided with any of the bad 
-    cubes."""
-    if len(bad_cubes) >= 1 and player_cube.rect.collidelist( [cube.rect for cube in bad_cubes] ) != -1:
+    """
+    Determines whether the player cube has collided with any of the bad 
+    cubes.
+    """
+    are_there_cubes = len(bad_cubes) >= 1
+    
+    bad_cubes_rects = [cube.rect for cube in bad_cubes]
+    does_player_collide = player_cube.rect.collidelist(bad_cubes_rects) != -1
+    
+    if are_there_cubes and does_player_collide:
         return True
     
     return False
 
+def cheats_input(pressed_keys, game_state):
+    """Changes levels when certain keys are pressed."""
+    def change_round(round_number, by_how_much):
+        return (round_number + by_how_much, True, True, 999)
+                
+    if pressed_keys[pygame.K_PAGEUP]:
+        (game_state[CURRENT_LEVEL_INDEX], 
+         game_state[IS_NEW_ROUND], 
+         game_state[HAS_DIED], 
+         game_state[CURRENT_LIVES]) = change_round(game_state[CURRENT_LEVEL_INDEX], 1)
+    
+    elif pressed_keys[pygame.K_PAGEDOWN]:
+        (game_state[CURRENT_LEVEL_INDEX],
+         game_state[IS_NEW_ROUND],
+         game_state[HAS_DIED],
+         game_state[CURRENT_LIVES]) = change_round(game_state[CURRENT_LEVEL_INDEX], -1)
+         
+
 def movement_input(pressed_keys, player_cube, player_cube_speed):
-    """Converts user input on keyboard into movement of player_cube on screen."""
+    """
+        Converts user input on keyboard into movement of player_cube on 
+        screen.
+    """
     
     def set_x_and_y_speeds(player_cube, player_cube_speed):
-        """Sets x and y speeds of player_cube depending on which keys are pressed."""
+        """
+            Sets x and y speeds of player_cube depending on which keys are 
+            pressed.
+        """
         #Controls movement
         if pressed_keys[pygame.K_LEFT]:
             player_cube.speed_x = -player_cube_speed
@@ -184,21 +364,26 @@ def movement_input(pressed_keys, player_cube, player_cube_speed):
             player_cube.speed_y = 0
     
     def normalize_diagonal_movement(player_cube):
-        """Alters x and y speeds of player_cube to normalize (equal in speed to
-        non-diagonal movement) diagonal movement."""
+        """
+            Alters x and y speeds of player_cube to normalize (equal in speed 
+            to non-diagonal movement) diagonal movement.
+        """
         #Keeps absolute speed constant-ish diagonal vs. straight
         #TODO: Should be using Pythagor (sp?) theorem. (Only works well for
         # multiples of 4 now
         if player_cube.speed_x and player_cube.speed_y:
+            x_speed = player_cube.speed_x
+            y_speed = player_cube.speed_y
+            
             if player_cube.speed_x > 0:
-                player_cube.speed_x = player_cube.speed_x // 2 + player_cube.speed_x // 4
+                player_cube.speed_x = x_speed // 2 + x_speed // 4
             else:
-                player_cube.speed_x = player_cube.speed_x // 2 - ((-player_cube.speed_x) // 4)
+                player_cube.speed_x = x_speed // 2 - ((-x_speed) // 4)
             
             if player_cube.speed_y > 0:
-                player_cube.speed_y = player_cube.speed_y // 2 + player_cube.speed_y // 4
+                player_cube.speed_y = y_speed // 2 + y_speed // 4
             else:
-                player_cube.speed_y = player_cube.speed_y // 2 - ((-player_cube.speed_y) // 4)
+                player_cube.speed_y = y_speed // 2 - ((-y_speed) // 4)
     
     set_x_and_y_speeds(player_cube, player_cube_speed)
     normalize_diagonal_movement(player_cube) 
@@ -206,13 +391,20 @@ def movement_input(pressed_keys, player_cube, player_cube_speed):
 
 def display_game_info_on_screen(screen, game_state, game_config):
     """Display current score, level name and lives onto screen."""
-    score_display = game_config[FONT].render(str(game_state[CURRENT_SCORE]), True, WHITE)
-    level_display = game_config[FONT].render("Level #" + str(game_state[CURRENT_LEVEL_INDEX] + 1) + ': ' + game_state[LEVEL_NAME], True, WHITE)
-    lives_display = game_config[FONT].render("Lives: " + str(game_state[CURRENT_LIVES]), True, WHITE)
-        
-    screen.blit(score_display, (game_config[WIDTH] - score_display.get_width(),0 ))    
+    score_display = game_config[FONT].render(str(game_state[CURRENT_SCORE]),
+                                             True, WHITE)
+    screen.blit(score_display,
+                (game_config[WIDTH]-score_display.get_width(),0))
+    
+    level_str = "Level #" + str(game_state[CURRENT_LEVEL_INDEX] + 1)
+    level_str += ': ' + game_state[LEVEL_NAME]
+    level_display = game_config[FONT].render(level_str, True, WHITE)
     screen.blit(level_display, (0,0))
-    screen.blit(lives_display, (0,game_config[HEIGHT]-lives_display.get_height()))        
+    
+    lives_str = "Lives: " + str(game_state[CURRENT_LIVES])
+    lives_display = game_config[FONT].render(lives_str, True, WHITE)    
+    screen.blit(lives_display,
+                (0,game_config[HEIGHT]-lives_display.get_height()))        
 
 def draw_score_zone_areas(screen, score_zones, font):
     """Draws score_zones areas onto screen."""
@@ -221,12 +413,13 @@ def draw_score_zone_areas(screen, score_zones, font):
         zone_name_display = font.render(zone_name, True, GRAY)
         screen.blit(zone_name_display, zone_rect.bottomleft)
 
-def draw_cubes(screen, player_cube, bad_cubes, should_keep_on_screen, bad_cube_counts ):
+def draw_cubes(screen, player_cube, bad_cubes, should_keep_on_screen,
+               bad_cube_counts ):
     """
         Draw player_cube and all cubes in bad_cubes onto screen.
         
-        Delete bad cubes which move off screen if should_keep_on_screen is False
-        and decrement their count in bad_cube_counts.
+        Delete bad cubes which move off screen if should_keep_on_screen is
+        False and decrement their count in bad_cube_counts.
     """
     screen.blit(player_cube.surface, player_cube.rect)
     
@@ -299,7 +492,9 @@ def main():
     
     pygame.display.set_caption("InfiniCube v0.7")
     
-    pygame.mixer.music.load(settings['sound']['FolderName'] + os.sep + settings['sound']['Theme'])
+    theme_path = settings['sound']['FolderName'] + os.sep
+    theme_path += settings['sound']['Theme']
+    pygame.mixer.music.load(theme_path)
     pygame.mixer.music.set_volume(float(settings['sound']['Volume']))
     
     pygame.mixer.music.play(loops=-1)
@@ -312,7 +507,9 @@ def main():
     game_state[GAME_CLOCK] = pygame.time.Clock()
     
     campaign_settings = configparser.ConfigParser()
-    campaign_settings.read('campaigns' + os.sep + settings['gameplay']['CampaignFilename'])
+    campaign_path = 'campaigns' + os.sep
+    campaign_path += settings['gameplay']['CampaignFilename']
+    campaign_settings.read(campaign_path)
     
     game_state[LEVELS] = campaign_settings.sections()
     
@@ -320,15 +517,21 @@ def main():
     game_state[CURRENT_LIVES] = game_state[MAX_LIVES]
     
     #Build score zones
-    score_zone_A = pygame.Rect( (0,0), (int(game_config[WIDTH]//4 * 1.5), int(game_config[HEIGHT]//4 * 1.5)))
-    score_zone_B = pygame.Rect( (0,0), (int(game_config[WIDTH]//2 * 1.5), int(game_config[HEIGHT]//2 * 1.5)))
-    score_zone_C = pygame.Rect( (0,0), (game_config[WIDTH], game_config[HEIGHT]))
+    score_zone_A = pygame.Rect( (0,0), (int(game_config[WIDTH]//4 * 1.5),
+                                         int(game_config[HEIGHT]//4 * 1.5)))
     
+    score_zone_B = pygame.Rect( (0,0), (int(game_config[WIDTH]//2 * 1.5),
+                                         int(game_config[HEIGHT]//2 * 1.5)))
     
-    game_state[SCORE_ZONES] = [('A', score_zone_A), ('B', score_zone_B), ('C', score_zone_C)]
+    score_zone_C = pygame.Rect( (0,0), (game_config[WIDTH], 
+                                        game_config[HEIGHT]))
+    
+    game_state[SCORE_ZONES] = [('A', score_zone_A), ('B', score_zone_B),
+                                ('C', score_zone_C)]
     
     for (_, score_zone) in game_state[SCORE_ZONES]:
         score_zone.center = (game_config[WIDTH]//2, game_config[HEIGHT]//2)
+    
     
     game_state[CURRENT_SCORE] = 0
     
@@ -337,159 +540,22 @@ def main():
     game_state[IS_NEW_ROUND] = True
     game_state[HAS_DIED] = False
 
+    
     while True:
-        zone_index = game_state[PLAYER_CUBE].rect.collidelist([zone for (_, zone) in game_state[SCORE_ZONES]])
-        if zone_index != -1:            
-            if zone_index == 0:
-                score_to_add = 7
-            
-            elif zone_index == 1:
-                score_to_add = 3
-                
-            elif zone_index == 2:
-                score_to_add = 1
-            
-            game_state[CURRENT_SCORE] += score_to_add
+        add_points_to_score(game_state)
         
-        if game_state[IS_NEW_ROUND] or game_state[HAS_DIED]:            
-            if not game_state[HAS_DIED] and game_state[CURRENT_LEVEL_INDEX] != -1:
-                if not game_config[SKIP_SOUNDS]:
-                    play_sound(settings, 'NextRound', repeat=1)
-                
-                game_state[CURRENT_LEVEL_INDEX] += 1
-                game_state[CURRENT_LIVES] += 1 
-                
-            if game_state[CURRENT_LEVEL_INDEX] == -1:
-                game_state[CURRENT_LEVEL_INDEX] += 1                     
-                
-            if game_state[HAS_DIED]: 
-                if not game_config[SKIP_SOUNDS]:               
-                    play_sound(settings, 'Loss', repeat=1)
-                
-                if game_state[CURRENT_LEVEL_INDEX] == 0 and game_state[CURRENT_LIVES] == game_state[MAX_LIVES]:
-                    save_score(game_state, 
-                               campaign_settings[game_state[LEVEL_NAME]]['CampaignName'],
-                               campaign_settings[game_state[LEVEL_NAME]]['CampaignShortName'])
-                    
-                    game_state[CURRENT_SCORE] = 0
-                    
-                if game_state[CURRENT_LEVEL_INDEX] != 0:
-                    game_state[CURRENT_LIVES] -= 1
-                    
-                if game_state[CURRENT_LIVES] == 0:
-                    save_score(game_state, 
-                               campaign_settings[game_state[LEVEL_NAME]]['CampaignName'], 
-                               campaign_settings[game_state[LEVEL_NAME]]['CampaignShortName'])
-                    
-                    game_state[CURRENT_LEVEL_INDEX] = 0
-                    game_state[CURRENT_SCORE] = 0
-                    game_state[CURRENT_LIVES] = game_state[MAX_LIVES]
-            
-            if game_state[CURRENT_LEVEL_INDEX] > len(game_state[LEVELS])-1:
-                save_score(game_state, 
-                           campaign_settings[game_state[LEVEL_NAME]]['CampaignName'],
-                           campaign_settings[game_state[LEVELS][game_state[CURRENT_LEVEL_INDEX]-1]]['CampaignShortName'])
-                sys.exit(0)
-            
-            game_state[LEVELS] = campaign_settings.sections()
-            game_state[LEVEL_NAME] = game_state[LEVELS][game_state[CURRENT_LEVEL_INDEX]]
-            
-            game_state[PLAYER_CUBE] = PlayerCube()
-            
-            game_state[PLAYER_CUBE_SPEED] = int(campaign_settings[game_state[LEVEL_NAME]]['GoodCubeSpeed'])
-            
-            if campaign_settings[game_state[LEVEL_NAME]]['KeepOnScreen'] == '1':
-                game_state[SHOULD_KEEP_ON_SCREEN] = True
-            else:
-                game_state[SHOULD_KEEP_ON_SCREEN] = False
-            
-            game_state[BASE_BAD_CUBE_SPEED] = int(campaign_settings[game_state[LEVEL_NAME]]['StartSpeed'])
-            game_state[SPEED_MODIFIER] = 0
-            
-            game_state[MAX_SPEED_MODIFIER] = int(campaign_settings[game_state[LEVEL_NAME]]['SpeedLevelsPerRound'])
-            game_state[SECONDS_PER_LEVEL] = float(campaign_settings[game_state[LEVEL_NAME]]['SecondsPerLevel'])
-            
-            
-            game_state[BAD_CUBE_SPAWN_RATE] = float(campaign_settings[game_state[LEVEL_NAME]]['SpawnRate'])
-            
-            
-            max_hori_left_cubes = int(campaign_settings[game_state[LEVEL_NAME]]['MaxHoriLCubes'])
-            max_hori_right_cubes = int(campaign_settings[game_state[LEVEL_NAME]]['MaxHoriRCubes'])
-            
-            max_verti_top_cubes = int(campaign_settings[game_state[LEVEL_NAME]]['MaxVertiTCubes'])
-            max_verti_bottom_cubes = int(campaign_settings[game_state[LEVEL_NAME]]['MaxVertiBCubes'])
-            
-            max_dia_cubes = int(campaign_settings[game_state[LEVEL_NAME]]['MaxDiaCubes'])
-            max_rock_cubes = int(campaign_settings[game_state[LEVEL_NAME]]['MaxRockCubes'])
-            
-            
-            game_state[BAD_CUBE_MAXIMUMS] = {CUBE_TYPES[0]: max_hori_left_cubes,
-                                             CUBE_TYPES[1]: max_hori_right_cubes,
-                                             CUBE_TYPES[2]: max_verti_top_cubes,
-                                             CUBE_TYPES[3]: max_verti_bottom_cubes,
-                                             CUBE_TYPES[4]: max_dia_cubes, 
-                                             CUBE_TYPES[5]: max_rock_cubes}
-            
-            game_state[BAD_CUBE_COUNTS] =  {CUBE_TYPES[0]: 0, CUBE_TYPES[1]: 0,
-                                            CUBE_TYPES[2]: 0, CUBE_TYPES[3]: 0,
-                                            CUBE_TYPES[4]: 0, CUBE_TYPES[5]: 0}
-            
-            game_state[BAD_CUBES] = []
-            
-            game_state[FRAME_COUNTER] = 0
-        
-            game_state[IS_NEW_ROUND] = False
-            game_state[HAS_DIED] = False
-        
+        #Changes level if needed and resets score, lives, ... if needed
+        if game_state[IS_NEW_ROUND] or game_state[HAS_DIED]:
+            change_level(game_state, game_config, settings, campaign_settings)
+    
         game_state[FRAME_COUNTER] += 1        
         
         if game_state[SPEED_MODIFIER] == game_state[MAX_SPEED_MODIFIER]:
             game_state[IS_NEW_ROUND] = True
             
-        #Creates bad cubes
+        #Spawn new bad cubes
         if game_state[FRAME_COUNTER] % seconds_to_frames(game_config[FRAME_RATE], game_state[BAD_CUBE_SPAWN_RATE]) == 0:            
-            is_spawned = False
-            
-            while not is_spawned:
-                cube_type_index = random.randint(0, 5)
-                
-                new_speed = game_state[BASE_BAD_CUBE_SPEED] + game_state[SPEED_MODIFIER]
-                
-                cube_name = CUBE_TYPES[cube_type_index]
-                
-                #Do nothing if every cube is maxed out
-                if is_all_maxed_out(game_state[BAD_CUBE_COUNTS], game_state[BAD_CUBE_MAXIMUMS]):
-                    is_spawned = True
-                
-                elif game_state[BAD_CUBE_COUNTS][cube_name] < game_state[BAD_CUBE_MAXIMUMS][cube_name]:
-                    def get_new_bad_cube(bad_cube_counts):
-                        if cube_name == CUBE_TYPES[0]:
-                            bad_cube = HoriLeftCube(new_speed)
-                            bad_cube_counts[cube_name] += 1
-                        elif cube_name == CUBE_TYPES[1]:
-                            bad_cube = HoriRightCube(new_speed)
-                            bad_cube_counts[cube_name] += 1
-                        elif cube_name == CUBE_TYPES[2]:
-                            bad_cube = VertiTopCube(new_speed)
-                            bad_cube_counts[cube_name] += 1
-                        elif cube_name == CUBE_TYPES[3]:
-                            bad_cube = VertiBotCube(new_speed)
-                            bad_cube_counts[cube_name] += 1
-                        elif cube_name == CUBE_TYPES[4]:
-                            bad_cube = DiaCube(new_speed)
-                            bad_cube_counts[cube_name] += 1
-                        elif cube_name == CUBE_TYPES[5]:
-                            bad_cube = RockCube()
-                            bad_cube_counts[cube_name] += 1
-                            
-                        return bad_cube
-                    
-                    bad_cube = get_new_bad_cube(game_state[BAD_CUBE_COUNTS])
-                    
-                    if not game_state[PLAYER_CUBE].rect.inflate(game_config[SAFETY_ZONE_X],
-                                                                game_config[SAFETY_ZONE_Y]).colliderect(bad_cube.rect):
-                        game_state[BAD_CUBES].append(bad_cube)
-                        is_spawned = True
+            spawn_new_bad_cube(game_state, game_config)
         
         if game_state[FRAME_COUNTER] % seconds_to_frames(game_config[FRAME_RATE], game_state[SECONDS_PER_LEVEL]) == 0:
             game_state[SPEED_MODIFIER] += 1            
@@ -503,30 +569,16 @@ def main():
             
             if event.type == pygame.QUIT or pressed_keys[pygame.K_ESCAPE]:
                 sys.exit()
-            
+                
             #DEBUG: Fast Round Switch
             if game_config[CHEATS_ENABLED]:
-                def change_round(round_number, by_how_much):
-                    return (round_number + by_how_much, True, True, 999)
-                
-                if pressed_keys[pygame.K_PAGEUP]:
-                    (game_state[CURRENT_LEVEL_INDEX], 
-                     game_state[IS_NEW_ROUND], 
-                     game_state[HAS_DIED], 
-                     game_state[CURRENT_LIVES]) = change_round(game_state[CURRENT_LEVEL_INDEX], 1)
-                
-                elif pressed_keys[pygame.K_PAGEDOWN]:
-                    (game_state[CURRENT_LEVEL_INDEX],
-                     game_state[IS_NEW_ROUND],
-                     game_state[HAS_DIED],
-                     game_state[CURRENT_LIVES]) = change_round(game_state[CURRENT_LEVEL_INDEX], -1)
+                cheats_input(pressed_keys, game_state)
             
             movement_input(pressed_keys, 
                            game_state[PLAYER_CUBE], game_state[PLAYER_CUBE_SPEED])
         
-        game_state[PLAYER_CUBE].move()
         
-        #Keeps good cube on screen
+        game_state[PLAYER_CUBE].move()
         game_state[PLAYER_CUBE].keep_on_screen()
 
         screen.fill(BLACK)
@@ -542,9 +594,6 @@ def main():
         pygame.display.flip()
          
         game_state[GAME_CLOCK].tick(game_config[FRAME_RATE])
-    
-def seconds_to_frames(frame_rate, number_of_seconds):
-    return int(number_of_seconds * frame_rate)
 
 if __name__== "__main__":
         main()
