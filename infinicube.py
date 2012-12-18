@@ -107,8 +107,11 @@ def play_sound(settings, sound_name, repeat=1):
     pygame.mixer.music.play(-1)
 
 def save_score(game_state, campaign_name, campaign_short_name):
-                    
+    """Saves player's score to a .txt file according to the name and
+    short name of the campaign being played."""
+    
     high_score_filename = HIGHSCORE_FOLDER + campaign_short_name + '_' + HIGHSCORE_FILENAME
+    
     #Add new score
     with open(high_score_filename, 'a', newline='') as csvfile:
         high_score_writer = csv.writer(csvfile, delimiter=' ',
