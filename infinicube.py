@@ -415,10 +415,10 @@ def draw_score_zone_areas(screen, score_zones, font):
 
 def move_cubes(screen, player_cube, bad_cubes, should_keep_on_screen, bad_cube_counts ):
     """
-        Draw player_cube and all cubes in bad_cubes onto screen.
+        Move player_cube and all cubes in bad_cubes and keep them on screen.
         
-        Delete bad cubes which move off screen if should_keep_on_screen is
-        False and decrement their count in bad_cube_counts.
+        Unless should_keep_on_screen is False, in which case, delete the bad 
+        cubes which move off screen and decrement their count in bad_cube_counts.
     """
     
     player_cube.move()
@@ -456,6 +456,7 @@ def move_cubes(screen, player_cube, bad_cubes, should_keep_on_screen, bad_cube_c
         del_count += 1
 
 def draw_cubes(screen, player_cube, bad_cubes):
+    """Draw player_cube and all cubes in bad_cubes onto screen."""
     screen.blit(player_cube.surface, player_cube.rect)
     
     for i in range(0, len(bad_cubes)):
