@@ -208,6 +208,7 @@ def change_level(game_state, game_config, settings, campaign_settings):
             game_state[CURRENT_SCORE] = 0
             game_state[CURRENT_LIVES] = game_state[MAX_LIVES]
     
+    #Player has beaten all levels in a campaign
     if game_state[CURRENT_LEVEL_INDEX] > len(game_state[LEVELS])-1:
         save_score(game_state, 
                    campaign_settings[game_state[LEVEL_NAME]]['CampaignName'],
