@@ -86,26 +86,25 @@ SAFETY_ZONE_X = 'safety_zone_x'
 SAFETY_ZONE_Y = 'safety_zone_y'
 
 
-def play_sound(game_config, settings, sound_name, repeat=1):
+def play_sound(settings, sound_name, repeat=1):
     """Stop the game loop and play a sound a certain number of times."""
     def seconds_to_ms(time_in_seconds):
         """Converts seconds to milliseconds"""
         return time_in_seconds * 1000
     
-    if not game_config[SKIP_SOUNDS]:
-        pygame.mixer.music.stop()
-        
-        sound_folder = settings['sound']['FolderName'] + os.sep
-        
-        sound = pygame.mixer.Sound(sound_folder + settings['sound'][sound_name])
-        sound.set_volume(float(settings['sound']['Volume']))
-        
-        for _ in range(0, repeat):
-            sound.play()
-            pygame.time.wait(int(seconds_to_ms(sound.get_length())))
-        
-        pygame.mixer.music.rewind()
-        pygame.mixer.music.play(-1)
+    pygame.mixer.music.stop()
+    
+    sound_folder = settings['sound']['FolderName'] + os.sep
+    
+    sound = pygame.mixer.Sound(sound_folder + settings['sound'][sound_name])
+    sound.set_volume(float(settings['sound']['Volume']))
+    
+    for _ in range(0, repeat):
+        sound.play()
+        pygame.time.wait(int(seconds_to_ms(sound.get_length())))
+    
+    pygame.mixer.music.rewind()
+    pygame.mixer.music.play(-1)
 
 def save_score(game_state, campaign_name, campaign_short_name):
                     
@@ -334,7 +333,8 @@ def main():
         
         if game_state[IS_NEW_ROUND] or game_state[HAS_DIED]:            
             if not game_state[HAS_DIED] and game_state[CURRENT_LEVEL_INDEX] != -1:
-                play_sound(game_config, settings, 'NextRound', repeat=1)
+                if not game_config[SKIP_SOUNDS]:
+                    play_sound(settings, 'NextRound', repeat=1)
                 
                 game_state[CURRENT_LEVEL_INDEX] += 1
                 game_state[CURRENT_LIVES] += 1 
@@ -342,8 +342,9 @@ def main():
             if game_state[CURRENT_LEVEL_INDEX] == -1:
                 game_state[CURRENT_LEVEL_INDEX] += 1                     
                 
-            if game_state[HAS_DIED]:                
-                play_sound(game_config, settings, 'Loss', repeat=1)
+            if game_state[HAS_DIED]: 
+                if not game_config[SKIP_SOUNDS]:               
+                    play_sound(settings, 'Loss', repeat=1)
                 
                 if game_state[CURRENT_LEVEL_INDEX] == 0 and game_state[CURRENT_LIVES] == game_state[MAX_LIVES]:
                     save_score(game_state, 
