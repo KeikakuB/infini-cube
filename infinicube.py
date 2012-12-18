@@ -144,20 +144,27 @@ def save_score(game_state, campaign_name, campaign_short_name):
             high_score_writer.writerow(high_score)
 
 def is_all_maxed_out(bad_cube_counts, bad_cube_maximums):
+    """Determines whether all the cubes of each type are at their maximum 
+    amounts."""
     for cube_type in CUBE_TYPES:
         if bad_cube_counts[cube_type] < bad_cube_maximums[cube_type]:
             return False
         
     return True
 
-def detect_player_death(player_cube, bad_cubes):
+def has_player_died(player_cube, bad_cubes):
+    """Determines whether the player cube has collided with any of the bad 
+    cubes."""
     if len(bad_cubes) >= 1 and player_cube.rect.collidelist( [cube.rect for cube in bad_cubes] ) != -1:
         return True
     
     return False
 
 def movement_input(pressed_keys, player_cube, player_cube_speed):
+    """Converts user input on keyboard into movement of player_cube on screen."""
+    
     def set_x_and_y_speeds(player_cube, player_cube_speed):
+        """Sets x and y speeds of player_cube depending on which keys are pressed."""
         #Controls movement
         if pressed_keys[pygame.K_LEFT]:
             player_cube.speed_x = -player_cube_speed
@@ -177,6 +184,8 @@ def movement_input(pressed_keys, player_cube, player_cube_speed):
             player_cube.speed_y = 0
     
     def normalize_diagonal_movement(player_cube):
+        """Alters x and y speeds of player_cube to normalize (equal in speed to
+        non-diagonal movement) diagonal movement."""
         #Keeps absolute speed constant-ish diagonal vs. straight
         #TODO: Should be using Pythagor (sp?) theorem. (Only works well for
         # multiples of 4 now
@@ -196,6 +205,7 @@ def movement_input(pressed_keys, player_cube, player_cube_speed):
 
 
 def display_game_info_on_screen(screen, game_state, game_config):
+    """Display current score, level name and lives onto screen."""
     score_display = game_config[FONT].render(str(game_state[CURRENT_SCORE]), True, WHITE)
     level_display = game_config[FONT].render("Level #" + str(game_state[CURRENT_LEVEL_INDEX] + 1) + ': ' + game_state[LEVEL_NAME], True, WHITE)
     lives_display = game_config[FONT].render("Lives: " + str(game_state[CURRENT_LIVES]), True, WHITE)
@@ -204,13 +214,20 @@ def display_game_info_on_screen(screen, game_state, game_config):
     screen.blit(level_display, (0,0))
     screen.blit(lives_display, (0,game_config[HEIGHT]-lives_display.get_height()))        
 
-def paint_zone_areas(screen, game_state, game_config):
-    for (zone_name, zone_rect) in game_state[SCORE_ZONES]:
+def draw_score_zone_areas(screen, score_zones, font):
+    """Draws score_zones areas onto screen."""
+    for (zone_name, zone_rect) in score_zones:
         pygame.draw.rect(screen, GRAY, zone_rect, 1)
-        zone_name_display = game_config[FONT].render(zone_name, True, GRAY)
+        zone_name_display = font.render(zone_name, True, GRAY)
         screen.blit(zone_name_display, zone_rect.bottomleft)
 
-def blit_cubes(screen, player_cube, bad_cubes, should_keep_on_screen, bad_cube_counts ):
+def draw_cubes(screen, player_cube, bad_cubes, should_keep_on_screen, bad_cube_counts ):
+    """
+        Draw player_cube and all cubes in bad_cubes onto screen.
+        
+        Delete bad cubes which move off screen if should_keep_on_screen is False
+        and decrement their count in bad_cube_counts.
+    """
     screen.blit(player_cube.surface, player_cube.rect)
     
     indices_to_delete = []
@@ -478,7 +495,7 @@ def main():
             game_state[SPEED_MODIFIER] += 1            
         
         
-        game_state[HAS_DIED] = detect_player_death(game_state[PLAYER_CUBE], game_state[BAD_CUBES])
+        game_state[HAS_DIED] = has_player_died(game_state[PLAYER_CUBE], game_state[BAD_CUBES])
         
         
         for event in pygame.event.get():            
@@ -516,9 +533,9 @@ def main():
         
         display_game_info_on_screen(screen, game_state, game_config)
         
-        paint_zone_areas(screen, game_state, game_config)
+        draw_score_zone_areas(screen, game_state[SCORE_ZONES], game_config[FONT])
         
-        blit_cubes(screen, game_state[PLAYER_CUBE], game_state[BAD_CUBES],
+        draw_cubes(screen, game_state[PLAYER_CUBE], game_state[BAD_CUBES],
                        game_state[SHOULD_KEEP_ON_SCREEN],
                        game_state[BAD_CUBE_COUNTS])
         
