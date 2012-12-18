@@ -413,16 +413,17 @@ def draw_score_zone_areas(screen, score_zones, font):
         zone_name_display = font.render(zone_name, True, GRAY)
         screen.blit(zone_name_display, zone_rect.bottomleft)
 
-def draw_cubes(screen, player_cube, bad_cubes, should_keep_on_screen,
-               bad_cube_counts ):
+def move_cubes(screen, player_cube, bad_cubes, should_keep_on_screen, bad_cube_counts ):
     """
         Draw player_cube and all cubes in bad_cubes onto screen.
         
         Delete bad cubes which move off screen if should_keep_on_screen is
         False and decrement their count in bad_cube_counts.
     """
-    screen.blit(player_cube.surface, player_cube.rect)
     
+    player_cube.move()
+    player_cube.keep_on_screen()
+        
     indices_to_delete = []
     for i in range(0, len(bad_cubes)):
         bad_cubes[i].move()
@@ -433,8 +434,6 @@ def draw_cubes(screen, player_cube, bad_cubes, should_keep_on_screen,
                 bad_cubes[i].keep_on_screen()
             else:
                 indices_to_delete.append(i)
-        
-        screen.blit(bad_cubes[i].surface, bad_cubes[i].rect)
     
     del_count = 0
     for index in indices_to_delete:
@@ -454,8 +453,14 @@ def draw_cubes(screen, player_cube, bad_cubes, should_keep_on_screen,
             bad_cube_counts[CUBE_TYPES[5]] -= 1
         
         del bad_cubes[index-del_count]
-        del_count += 1      
-        
+        del_count += 1
+
+def draw_cubes(screen, player_cube, bad_cubes):
+    screen.blit(player_cube.surface, player_cube.rect)
+    
+    for i in range(0, len(bad_cubes)):
+        screen.blit(bad_cubes[i].surface, bad_cubes[i].rect)
+
 
 def main():
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -577,9 +582,6 @@ def main():
             movement_input(pressed_keys, 
                            game_state[PLAYER_CUBE], game_state[PLAYER_CUBE_SPEED])
         
-        
-        game_state[PLAYER_CUBE].move()
-        game_state[PLAYER_CUBE].keep_on_screen()
 
         screen.fill(BLACK)
         
@@ -587,9 +589,10 @@ def main():
         
         draw_score_zone_areas(screen, game_state[SCORE_ZONES], game_config[FONT])
         
-        draw_cubes(screen, game_state[PLAYER_CUBE], game_state[BAD_CUBES],
-                       game_state[SHOULD_KEEP_ON_SCREEN],
-                       game_state[BAD_CUBE_COUNTS])
+        move_cubes(screen, game_state[PLAYER_CUBE], game_state[BAD_CUBES], 
+                   game_state[SHOULD_KEEP_ON_SCREEN],game_state[BAD_CUBE_COUNTS])
+        
+        draw_cubes(screen, game_state[PLAYER_CUBE], game_state[BAD_CUBES])
         
         pygame.display.flip()
          
