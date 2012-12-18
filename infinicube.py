@@ -25,6 +25,7 @@ from thecubes import PlayerCube, HoriLeftCube, HoriRightCube, VertiTopCube, Vert
 
 import csv
 
+
 CUBE_TYPES = ['HoriLeftCube','HoriRightCube','VertiTopCube',
               'VertiBotCube','DiaCube','RockCube']
 
@@ -34,6 +35,7 @@ BLACK = (0, 0, 0)
 
 HIGHSCORE_FOLDER = 'highscores' + os.sep
 HIGHSCORE_FILENAME = 'highscores.txt'
+
 
 #game_state dictionary keys
 FRAME_COUNTER = 'frame_counter'
@@ -68,6 +70,7 @@ PLAYER_CUBE_SPEED = 'player_cube_speed'
 SHOULD_KEEP_ON_SCREEN = 'should_keep_on_screen'
 BAD_CUBES = 'bad_cubes'    
 
+
 #game_config dictionary keys
 game_config = {}
 
@@ -83,7 +86,12 @@ SAFETY_ZONE_X = 'safety_zone_x'
 SAFETY_ZONE_Y = 'safety_zone_y'
 
 
-def play_sound(game_config, settings, sound_name):
+def play_sound(game_config, settings, sound_name, repeat=1):
+    """Stop the game loop and play a sound a certain number of times."""
+    def seconds_to_ms(time_in_seconds):
+        """Converts seconds to milliseconds"""
+        return time_in_seconds * 1000
+    
     if not game_config[SKIP_SOUNDS]:
         pygame.mixer.music.stop()
         
@@ -91,9 +99,10 @@ def play_sound(game_config, settings, sound_name):
         
         sound = pygame.mixer.Sound(sound_folder + settings['sound'][sound_name])
         sound.set_volume(float(settings['sound']['Volume']))
-        sound.play()
         
-        pygame.time.wait(int(sound.get_length() * 1000))
+        for _ in range(0, repeat):
+            sound.play()
+            pygame.time.wait(int(seconds_to_ms(sound.get_length())))
         
         pygame.mixer.music.rewind()
         pygame.mixer.music.play(-1)
@@ -325,8 +334,8 @@ def main():
         
         if game_state[IS_NEW_ROUND] or game_state[HAS_DIED]:            
             if not game_state[HAS_DIED] and game_state[CURRENT_LEVEL_INDEX] != -1:
-                play_sound(game_config, settings, 'NextRound')
-                play_sound(game_config, settings, 'NextRound')
+                play_sound(game_config, settings, 'NextRound', repeat=1)
+                
                 game_state[CURRENT_LEVEL_INDEX] += 1
                 game_state[CURRENT_LIVES] += 1 
                 
@@ -334,8 +343,7 @@ def main():
                 game_state[CURRENT_LEVEL_INDEX] += 1                     
                 
             if game_state[HAS_DIED]:                
-                play_sound(game_config, settings, 'Loss')
-                play_sound(game_config, settings, 'Loss')
+                play_sound(game_config, settings, 'Loss', repeat=1)
                 
                 if game_state[CURRENT_LEVEL_INDEX] == 0 and game_state[CURRENT_LIVES] == game_state[MAX_LIVES]:
                     save_score(game_state, 
