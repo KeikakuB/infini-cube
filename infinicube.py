@@ -459,8 +459,8 @@ def draw_cubes(screen, player_cube, bad_cubes):
     """Draw player_cube and all cubes in bad_cubes onto screen."""
     screen.blit(player_cube.surface, player_cube.rect)
     
-    for i in range(0, len(bad_cubes)):
-        screen.blit(bad_cubes[i].surface, bad_cubes[i].rect)
+    for bad_cube in bad_cubes:
+        screen.blit(bad_cube.surface, bad_cube.rect)
 
 
 def main():
