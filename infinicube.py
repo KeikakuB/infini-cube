@@ -319,20 +319,19 @@ def has_player_died(player_cube, bad_cubes):
 
 def cheats_input(pressed_keys, game_state):
     """Changes levels when certain keys are pressed."""
-    def change_round(round_number, by_how_much):
-        return (round_number + by_how_much, True, True, 999)
-                
+    is_cheating = False
     if pressed_keys[pygame.K_PAGEUP]:
-        (game_state[CURRENT_LEVEL_INDEX], 
-         game_state[IS_NEW_ROUND], 
-         game_state[HAS_DIED], 
-         game_state[CURRENT_LIVES]) = change_round(game_state[CURRENT_LEVEL_INDEX], 1)
+        is_cheating = True
+        game_state[CURRENT_LEVEL_INDEX] += 1 
     
     elif pressed_keys[pygame.K_PAGEDOWN]:
-        (game_state[CURRENT_LEVEL_INDEX],
-         game_state[IS_NEW_ROUND],
-         game_state[HAS_DIED],
-         game_state[CURRENT_LIVES]) = change_round(game_state[CURRENT_LEVEL_INDEX], -1)
+        game_state[CURRENT_LEVEL_INDEX] -= 1
+        is_cheating = True
+    
+    if is_cheating:
+        game_state[IS_NEW_ROUND] = True
+        game_state[HAS_DIED] = True
+        game_state[CURRENT_LIVES] = 9999
          
 
 def movement_input(pressed_keys, player_cube, player_cube_speed):
