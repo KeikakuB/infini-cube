@@ -202,7 +202,7 @@ def change_level(game_state, game_config, settings):
             play_sound(settings, 'Loss', repeat=1)
         
         if game_state[CURRENT_LEVEL_INDEX] == 0 and game_state[CURRENT_LIVES] == game_state[MAX_LIVES]:
-            if not game_state[CHEATS_ENABLED]:
+            if not game_config[CHEATS_ENABLED]:
                 save_score(game_state, 
                            campaign_settings[game_state[LEVEL_NAME]]['CampaignName'],
                            campaign_settings[game_state[LEVEL_NAME]]['CampaignShortName'])
@@ -213,7 +213,7 @@ def change_level(game_state, game_config, settings):
             game_state[CURRENT_LIVES] -= 1
             
         if game_state[CURRENT_LIVES] == 0:
-            if not game_state[CHEATS_ENABLED]:
+            if not game_config[CHEATS_ENABLED]:
                 save_score(game_state, 
                            campaign_settings[game_state[LEVEL_NAME]]['CampaignName'], 
                            campaign_settings[game_state[LEVEL_NAME]]['CampaignShortName'])
@@ -224,7 +224,7 @@ def change_level(game_state, game_config, settings):
     
     #Player has beaten all levels in a campaign
     if game_state[CURRENT_LEVEL_INDEX] > len(game_state[LEVELS])-1:
-        if not game_state[CHEATS_ENABLED]:
+        if not game_config[CHEATS_ENABLED]:
             save_score(game_state, 
                        campaign_settings[game_state[LEVEL_NAME]]['CampaignName'],
                        campaign_settings[game_state[LEVELS][game_state[CURRENT_LEVEL_INDEX]-1]]['CampaignShortName'])
@@ -497,14 +497,14 @@ def build_campaign_menu_choices(game_state, game_config):
             campaign_info = configparser.ConfigParser()
             campaign_info.read('campaigns' + os.sep + files)
             
-            campaign = (files, campaign_info['DEFAULT']['CampaignName'])
+            campaign = (files, campaign_info['DEFAULT']['CampaignName'] + '(' + campaign_info['DEFAULT']['Difficulty'] + ')')
             campaign_display = game_config[FONT_MENU].render(campaign[1], True, WHITE)
             
             game_state[CAMPAIGN_MENU_CHOICES].append(campaign)
             game_state[CAMPAIGN_MENU_SURFACES].append(campaign_display)
             
             campaign_display_rect = campaign_display.get_rect()
-            x_value = game_config[WIDTH]//3
+            x_value = game_config[WIDTH]//4
             y_value = game_config[HEIGHT]//3 + vertical_offset
             campaign_display_rect = campaign_display_rect.move((x_value, y_value))
             game_state[CAMPAIGN_MENU_RECTS].append(campaign_display_rect)
