@@ -488,6 +488,30 @@ def draw_cubes(screen, player_cube, bad_cubes):
     for bad_cube in bad_cubes:
         screen.blit(bad_cube.surface, bad_cube.rect)
 
+def build_campaign_menu_choices(game_state, game_config):
+    game_state[CAMPAIGN_MENU_CHOICES] = []
+    
+    vertical_offset = 0
+    for files in os.listdir('campaigns' + os.sep):
+        if files.endswith(".ini"):
+            campaign_info = configparser.ConfigParser()
+            campaign_info.read('campaigns' + os.sep + files)
+            
+            campaign = (files, campaign_info['DEFAULT']['CampaignName'])
+            campaign_display = game_config[FONT_MENU].render(campaign[1], True, WHITE)
+            
+            game_state[CAMPAIGN_MENU_CHOICES].append(campaign)
+            game_state[CAMPAIGN_MENU_SURFACES].append(campaign_display)
+            
+            campaign_display_rect = campaign_display.get_rect()
+            x_value = game_config[WIDTH]//3
+            y_value = game_config[HEIGHT]//3 + vertical_offset
+            campaign_display_rect = campaign_display_rect.move((x_value, y_value))
+            game_state[CAMPAIGN_MENU_RECTS].append(campaign_display_rect)
+            vertical_offset += 50
+    
+                
+    game_state[IS_MENU_LISTED] = True
 
 def main():
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -583,27 +607,7 @@ def main():
     while True:
         if game_state[IS_MENU]:
             if not game_state[IS_MENU_LISTED]:
-                game_state[CAMPAIGN_MENU_CHOICES] = []
-                vertical_offset = 0
-                for files in os.listdir('campaigns' + os.sep):
-                    if files.endswith(".ini"):
-                        campaign_info = configparser.ConfigParser()
-                        campaign_info.read('campaigns' + os.sep + files)
-                        
-                        campaign = (files, campaign_info['DEFAULT']['CampaignName'])
-                        campaign_display = game_config[FONT_MENU].render(campaign[1], True, WHITE)
-                        
-                        game_state[CAMPAIGN_MENU_CHOICES].append(campaign)
-                        game_state[CAMPAIGN_MENU_SURFACES].append(campaign_display)
-                        
-                        campaign_display_rect = campaign_display.get_rect()
-                        x_value = game_config[WIDTH]//3
-                        y_value = game_config[HEIGHT]//3 + vertical_offset
-                        campaign_display_rect = campaign_display_rect.move((x_value, y_value))
-                        game_state[CAMPAIGN_MENU_RECTS].append(campaign_display_rect)
-                        vertical_offset += 50
-            
-                game_state[IS_MENU_LISTED] = True
+                build_campaign_menu_choices(game_state, game_config)
         
         #Changes level if needed and resets score, lives, ... if needed
         if game_state[IS_NEW_ROUND] or game_state[HAS_DIED]:
