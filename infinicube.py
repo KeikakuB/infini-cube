@@ -202,9 +202,10 @@ def change_level(game_state, game_config, settings):
             play_sound(settings, 'Loss', repeat=1)
         
         if game_state[CURRENT_LEVEL_INDEX] == 0 and game_state[CURRENT_LIVES] == game_state[MAX_LIVES]:
-            save_score(game_state, 
-                       campaign_settings[game_state[LEVEL_NAME]]['CampaignName'],
-                       campaign_settings[game_state[LEVEL_NAME]]['CampaignShortName'])
+            if not game_state[CHEATS_ENABLED]:
+                save_score(game_state, 
+                           campaign_settings[game_state[LEVEL_NAME]]['CampaignName'],
+                           campaign_settings[game_state[LEVEL_NAME]]['CampaignShortName'])
             
             game_state[CURRENT_SCORE] = 0
             
@@ -212,9 +213,10 @@ def change_level(game_state, game_config, settings):
             game_state[CURRENT_LIVES] -= 1
             
         if game_state[CURRENT_LIVES] == 0:
-            save_score(game_state, 
-                       campaign_settings[game_state[LEVEL_NAME]]['CampaignName'], 
-                       campaign_settings[game_state[LEVEL_NAME]]['CampaignShortName'])
+            if not game_state[CHEATS_ENABLED]:
+                save_score(game_state, 
+                           campaign_settings[game_state[LEVEL_NAME]]['CampaignName'], 
+                           campaign_settings[game_state[LEVEL_NAME]]['CampaignShortName'])
             
             game_state[CURRENT_LEVEL_INDEX] = 0
             game_state[CURRENT_SCORE] = 0
@@ -222,10 +224,10 @@ def change_level(game_state, game_config, settings):
     
     #Player has beaten all levels in a campaign
     if game_state[CURRENT_LEVEL_INDEX] > len(game_state[LEVELS])-1:
-        logging.debug(game_state[CURRENT_LEVEL_INDEX])
-        save_score(game_state, 
-                   campaign_settings[game_state[LEVEL_NAME]]['CampaignName'],
-                   campaign_settings[game_state[LEVELS][game_state[CURRENT_LEVEL_INDEX]-1]]['CampaignShortName'])
+        if not game_state[CHEATS_ENABLED]:
+            save_score(game_state, 
+                       campaign_settings[game_state[LEVEL_NAME]]['CampaignName'],
+                       campaign_settings[game_state[LEVELS][game_state[CURRENT_LEVEL_INDEX]-1]]['CampaignShortName'])
         sys.exit(0)
     
     game_state[LEVELS] = campaign_settings.sections()
@@ -345,6 +347,7 @@ def cheats_input(pressed_keys, game_state):
         game_state[IS_NEW_ROUND] = True
         game_state[HAS_DIED] = True
         game_state[CURRENT_LIVES] = 9999
+        game_state[CURRENT_SCORE] = 0
          
 
 def movement_input(pressed_keys, player_cube, player_cube_speed):
