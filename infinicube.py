@@ -528,8 +528,6 @@ def main():
     game_config[FONT_HUD] = pygame.font.SysFont("comicsansms", 12)
     game_config[FONT_MENU] = pygame.font.SysFont("comicsansms", 30)
     
-    pygame.display.set_caption("InfiniCube v0.7")
-    
     theme_path = settings['sound']['FolderName'] + os.sep
     theme_path += settings['sound']['Theme']
     pygame.mixer.music.load(theme_path)
@@ -537,8 +535,10 @@ def main():
     
     pygame.mixer.music.play(loops=-1)
     
+
     screen = pygame.display.set_mode((game_config[WIDTH],game_config[HEIGHT]))
     
+    pygame.display.set_caption("InfiniCube v0.8")
     
     game_state[PLAYER_CUBE] = PlayerCube()
     

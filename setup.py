@@ -9,6 +9,6 @@ if sys.platform == "win32":
     
 setup(
     name = "InfiniCube",
-    version = "0.7",
+    version = "0.8",
     description = "InfiniCube, a next-generation game experience brought to you by Bill Tyros. 2012",
     executables = [Executable(script = "infinicube.py", base = base)])
