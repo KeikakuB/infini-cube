@@ -34,6 +34,8 @@ WHITE = (255, 255, 255)
 GRAY = (84, 84, 84)
 BLACK = (0, 0, 0)
 
+DIFFICULTY_LEVELS = ['Easy', 'Medium', 'Hard', 'Very Hard']
+
 HIGHSCORE_FOLDER = 'highscores' + os.sep
 HIGHSCORE_FILENAME = 'highscores.txt'
 
@@ -67,6 +69,7 @@ IS_MENU = 'is_menu'
 IS_MENU_LISTED = 'is_menu_listed'
 CAMPAIGN_SETTINGS = 'campaign_settings'
 CAMPAIGN_MENU_CHOICES = 'campaign_menu_choices'
+CAMPAIGN_MENU_CHOICES_NAMES = 'campaign_menu_choices_names'
 
 SCORE_ZONES = 'score_zones'
 
@@ -423,7 +426,7 @@ def display_game_info_on_screen(screen, game_state, game_config):
 
 def draw_campaign_choices(screen, game_state, game_config):
     vertical_offset = 0
-    for (_, menu_surface, menu_rect) in game_state[CAMPAIGN_MENU_CHOICES]:
+    for (menu_surface, menu_rect) in game_state[CAMPAIGN_MENU_CHOICES]:
         screen.blit(menu_surface, menu_rect)
         vertical_offset += menu_surface.get_height() + 10
 
@@ -485,36 +488,59 @@ def draw_cubes(screen, player_cube, bad_cubes):
         screen.blit(bad_cube.surface, bad_cube.rect)
 
 def build_campaign_menu_choices(game_state, game_config):
-    game_state[CAMPAIGN_MENU_CHOICES] = []
     
-    count = 0
-    multiplier = -1
-    vertical_offset = 0
+    def get_key_by_difficulty(difficulty_levels, difficulty):
+        if difficulty in difficulty_levels:
+            return DIFFICULTY_LEVELS.index(difficulty)
+        else:
+            return -1
+
+    game_state[CAMPAIGN_MENU_CHOICES_NAMES] = []
+
     for files in os.listdir('campaigns' + os.sep):
         if files.endswith(".ini"):
             campaign_info = configparser.ConfigParser()
             campaign_info.read('campaigns' + os.sep + files)
             
-            campaign = (files, campaign_info['DEFAULT']['CampaignName'] + '(' + campaign_info['DEFAULT']['Difficulty'] + ')')
-            campaign_display = game_config[FONT_MENU].render(campaign[1], True, WHITE)
+            campaign = (files, campaign_info['DEFAULT']['CampaignName'], campaign_info['DEFAULT']['Difficulty'])
+            game_state[CAMPAIGN_MENU_CHOICES_NAMES].append(campaign)
+    
+    game_state[CAMPAIGN_MENU_CHOICES_NAMES].sort(key=lambda x: get_key_by_difficulty(DIFFICULTY_LEVELS, x[2]))     
+    
+    count = 0
+    multiplier = -1
+    absolute_offset = 0
+    vertical_offsets = []
+    for _ in range(0, len(game_state[CAMPAIGN_MENU_CHOICES_NAMES])):
+        vertical_offsets.append(absolute_offset * multiplier)
+        
+        multiplier *= -1
+        
+        if count % 2 != 1 or count == 0:
+            absolute_offset += 50
             
-            campaign_display_rect = campaign_display.get_rect()
-            
-            x_value = game_config[WIDTH] // 2
-            logging.debug(vertical_offset * multiplier)
-            y_value = game_config[HEIGHT] // 2 + vertical_offset * multiplier
-            campaign_display_rect.center = (x_value, y_value)
-            
-            campaign_option = (campaign, campaign_display, campaign_display_rect)
-            game_state[CAMPAIGN_MENU_CHOICES].append(campaign_option)
-            
-            multiplier *= -1
-            
-            if count % 2 != 1 or count == 0:
-                vertical_offset += 50
-                
-            count += 1
-                
+        count += 1
+    
+    vertical_offsets.sort()
+    
+    game_state[CAMPAIGN_MENU_CHOICES] = []
+    i = 0
+    for offset in vertical_offsets:
+        (_, campaign_name, difficulty ) = game_state[CAMPAIGN_MENU_CHOICES_NAMES][i]
+        campaign_display = game_config[FONT_MENU].render(campaign_name + ' (' + difficulty + ')', True, WHITE)
+        
+        campaign_display_rect = campaign_display.get_rect()
+        
+        x_value = game_config[WIDTH] // 2
+        y_value = game_config[HEIGHT] // 2 + offset
+        
+        campaign_display_rect.center = (x_value, y_value)
+        
+        campaign_option = (campaign_display, campaign_display_rect)
+        game_state[CAMPAIGN_MENU_CHOICES].append(campaign_option)
+        
+        i += 1
+      
     game_state[IS_MENU_LISTED] = True
 
 def main():
@@ -641,12 +667,12 @@ def main():
                 sys.exit()
             
             # Select campaign
-            if pressed_keys[pygame.K_SPACE] or pressed_keys[pygame.K_RETURN]:
-                menu_option_rects = [rect for (_, _, rect) in game_state[CAMPAIGN_MENU_CHOICES]]
+            if game_state[IS_MENU] and (pressed_keys[pygame.K_SPACE] or pressed_keys[pygame.K_RETURN]):
+                menu_option_rects = [rect for (_, rect) in game_state[CAMPAIGN_MENU_CHOICES]]
                 choice_index = game_state[PLAYER_CUBE].rect.collidelist(menu_option_rects)
                 if choice_index != -1:
                     game_state[CAMPAIGN_SETTINGS] = configparser.ConfigParser()
-                    game_state[CAMPAIGN_SETTINGS].read('campaigns' + os.sep + game_state[CAMPAIGN_MENU_CHOICES][choice_index][0][0])
+                    game_state[CAMPAIGN_SETTINGS].read('campaigns' + os.sep + game_state[CAMPAIGN_MENU_CHOICES_NAMES][choice_index][0])
                     game_state[IS_MENU] = False
                     change_level(game_state, game_config, settings)
             
