@@ -75,6 +75,7 @@ SCORE_ZONES = 'score_zones'
 SCORE_ZONES_MAX = 'score_zones_max'
 SCORE_ZONE_LENGTH = 'score_zone_length'
 SCORE_ZONE_HEIGHT = 'score_zone_height'
+SCORE_ZONE_BUFFER = 'score_zone_buffer'
 
 LEVELS = 'levels'
 
@@ -125,18 +126,19 @@ def play_sound(settings, sound_name, repeat=1):
     pygame.mixer.music.play(-1)
 
 def make_score_zone(game_state, game_config):
-    zone_height = game_state[SCORE_ZONE_HEIGHT]
-    zone_length = game_state[SCORE_ZONE_LENGTH]
+    height = game_state[SCORE_ZONE_HEIGHT]
+    length = game_state[SCORE_ZONE_LENGTH]
+    buffer = game_state[SCORE_ZONE_BUFFER]
     for _ in range(len(game_state[SCORE_ZONES]), game_state[SCORE_ZONES_MAX] ):
-        new_score_zone = pygame.Rect((0, 0), (zone_length,zone_height))
+        new_score_zone = pygame.Rect((length//2, height//2), (length,height))
         
         is_colliding = True
         while is_colliding:
-            random_x = random.randint(zone_length, game_config[WIDTH] - zone_length)
-            random_y = random.randint(zone_height, game_config[HEIGHT] - zone_height)
+            random_x = random.randint(length + buffer, game_config[WIDTH] - (length + buffer))
+            random_y = random.randint(height + buffer, game_config[HEIGHT] - (height  + buffer))
             new_score_zone.center = (random_x, random_y)
             
-            if new_score_zone.inflate(zone_length, zone_height).collidelist([game_state[PLAYER_CUBE]] + game_state[SCORE_ZONES]) == -1:
+            if new_score_zone.inflate(length, height).collidelist([game_state[PLAYER_CUBE]] + game_state[SCORE_ZONES]) == -1:
                 is_colliding = False
         
         game_state[SCORE_ZONES].append(new_score_zone)
@@ -261,6 +263,7 @@ def change_level(game_state, game_config, settings):
     game_state[SCORE_ZONES] = []
     game_state[SCORE_ZONE_LENGTH] = int(campaign_settings[game_state[LEVEL_NAME]]['ScoreZoneLength'])
     game_state[SCORE_ZONE_HEIGHT] = int(campaign_settings[game_state[LEVEL_NAME]]['ScoreZoneHeight'])
+    game_state[SCORE_ZONE_BUFFER] = int(campaign_settings[game_state[LEVEL_NAME]]['ScoreZoneBuffer'])
     game_state[SCORE_ZONES_MAX] = int(campaign_settings[game_state[LEVEL_NAME]]['NumberOfScoreZonesAtSameTime'])
     
     if campaign_settings[game_state[LEVEL_NAME]]['KeepOnScreen'] == '1':
