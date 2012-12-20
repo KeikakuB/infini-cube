@@ -77,6 +77,9 @@ SCORE_ZONE_LENGTH = 'score_zone_length'
 SCORE_ZONE_HEIGHT = 'score_zone_height'
 SCORE_ZONE_BUFFER = 'score_zone_buffer'
 
+# TODO: Implement score zone lifetime/refresh rate
+SCORE_ZONE_LIFETIME = 'score_zone_lifetime'
+
 LEVELS = 'levels'
 
 PLAYER_CUBE = 'player_cube'
@@ -451,11 +454,16 @@ def draw_campaign_choices(screen, game_state, game_config):
         screen.blit(menu_surface, menu_rect)
         vertical_offset += menu_surface.get_height() + 10
 
+def draw_score_zone_spawn_area(screen, score_zone_buffer, game_config):
+    top_left = (score_zone_buffer, score_zone_buffer)
+    width_height = (game_config[WIDTH] - score_zone_buffer * 2, game_config[HEIGHT] - score_zone_buffer * 2)
+    spawn_area_rect = pygame.Rect(top_left, width_height)
+    pygame.draw.rect(screen, GRAY, spawn_area_rect, 3)
 
-def draw_score_zone_areas(screen, score_zones_rects, font):
+def draw_score_zones(screen, score_zones_rects):
     """Draws score_zones areas onto screen."""
     for zone_rect in score_zones_rects:
-        pygame.draw.rect(screen, GRAY, zone_rect, 1)
+        pygame.draw.rect(screen, GRAY, zone_rect, 2)
 
 def move_cubes(screen, player_cube, bad_cubes, should_keep_on_screen, bad_cube_counts):
     """
@@ -707,7 +715,8 @@ def main():
         
         if not game_state[IS_MENU]:
             display_game_info_on_screen(screen, game_state, game_config)
-            draw_score_zone_areas(screen, game_state[SCORE_ZONES], game_config[FONT_HUD])
+            draw_score_zone_spawn_area(screen, game_state[SCORE_ZONE_BUFFER], game_config)
+            draw_score_zones(screen, game_state[SCORE_ZONES])
         
         if game_state[IS_MENU]:
             draw_campaign_choices(screen, game_state, game_config)
