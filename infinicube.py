@@ -136,9 +136,11 @@ def add_points_to_score(game_state):
         
         game_state[CURRENT_SCORE] += score_to_add
         
-def save_score(game_state, campaign_name, campaign_short_name):
+def save_score(game_state, campaign_settings):
     """Saves player's score to a .txt file according to the name and
     short name of the campaign being played."""
+    campaign_name = campaign_settings[game_state[LEVEL_NAME]]['CampaignName']
+    campaign_short_name = campaign_settings[game_state[LEVEL_NAME]]['CampaignShortName']
     
     high_score_filename = HIGHSCORE_FOLDER + campaign_short_name
     high_score_filename += '_' + HIGHSCORE_FILENAME
@@ -204,9 +206,7 @@ def change_level(game_state, game_config, settings):
         
         if game_state[CURRENT_LEVEL_INDEX] == 0 and game_state[CURRENT_LIVES] == game_state[MAX_LIVES]:
             if not game_config[CHEATS_ENABLED]:
-                save_score(game_state,
-                           campaign_settings[game_state[LEVEL_NAME]]['CampaignName'],
-                           campaign_settings[game_state[LEVEL_NAME]]['CampaignShortName'])
+                save_score(game_state, campaign_settings)
             
             game_state[CURRENT_SCORE] = 0
             
@@ -215,9 +215,7 @@ def change_level(game_state, game_config, settings):
             
         if game_state[CURRENT_LIVES] == 0:
             if not game_config[CHEATS_ENABLED]:
-                save_score(game_state,
-                           campaign_settings[game_state[LEVEL_NAME]]['CampaignName'],
-                           campaign_settings[game_state[LEVEL_NAME]]['CampaignShortName'])
+                save_score(game_state, campaign_settings)
             
             game_state[CURRENT_LEVEL_INDEX] = 0
             game_state[CURRENT_SCORE] = 0
@@ -227,9 +225,7 @@ def change_level(game_state, game_config, settings):
     if game_state[CURRENT_LEVEL_INDEX] > len(game_state[LEVELS]) - 1:
         if not game_config[CHEATS_ENABLED]:
             play_sound(settings, 'NextRound', repeat=3)
-            save_score(game_state,
-                       campaign_settings[game_state[LEVEL_NAME]]['CampaignName'],
-                       campaign_settings[game_state[LEVELS][game_state[CURRENT_LEVEL_INDEX] - 1]]['CampaignShortName'])
+            save_score(game_state, campaign_settings)
         sys.exit(0)
     
     game_state[LEVELS] = campaign_settings.sections()
@@ -677,6 +673,9 @@ def main():
                     change_level(game_state, game_config, settings)
             
             if not game_state[IS_MENU] and pressed_keys[pygame.K_BACKSPACE]:
+                save_score(game_state, game_state[CAMPAIGN_SETTINGS])
+                play_sound(settings, 'Loss')
+                
                 game_state[IS_MENU] = True
                 game_state[CURRENT_SCORE] = 0
                 game_state[CURRENT_LEVEL_INDEX] = -1
