@@ -676,6 +676,13 @@ def main():
                     game_state[IS_MENU] = False
                     change_level(game_state, game_config, settings)
             
+            if not game_state[IS_MENU] and pressed_keys[pygame.K_BACKSPACE]:
+                game_state[IS_MENU] = True
+                game_state[CURRENT_SCORE] = 0
+                game_state[CURRENT_LEVEL_INDEX] = -1
+                game_state[IS_NEW_ROUND] = True
+                game_state[HAS_DIED] = False
+
             # DEBUG: Fast Round Switch
             if game_config[CHEATS_ENABLED] and not game_state[IS_MENU]:
                 cheats_input(pressed_keys, game_state)
