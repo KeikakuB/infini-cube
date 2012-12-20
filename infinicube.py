@@ -611,7 +611,7 @@ def main():
 
     screen = pygame.display.set_mode((game_config[WIDTH], game_config[HEIGHT]))
     
-    pygame.display.set_caption("InfiniCube v0.8")
+    pygame.display.set_caption("InfiniCube v0.9")
     
     game_state[PLAYER_CUBE] = PlayerCube()
     
