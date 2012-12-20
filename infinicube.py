@@ -124,22 +124,23 @@ def play_sound(settings, sound_name, repeat=1):
     pygame.mixer.music.rewind()
     pygame.mixer.music.play(-1)
 
-def make_more_score_zones(game_state, game_config):
+def make_score_zone(game_state, game_config):
     zone_height = game_state[SCORE_ZONE_HEIGHT]
     zone_length = game_state[SCORE_ZONE_LENGTH]
-    
-    new_score_zones = []
     for _ in range(len(game_state[SCORE_ZONES]), game_state[SCORE_ZONES_MAX] ):
         new_score_zone = pygame.Rect((0, 0), (zone_length,zone_height))
         
-        random_x = random.randint(zone_length, game_config[WIDTH] - zone_length)
-        random_y = random.randint(zone_height, game_config[HEIGHT] - zone_height)
-        new_score_zone.center = (random_x, random_y)
+        is_colliding = True
+        while is_colliding:
+            random_x = random.randint(zone_length, game_config[WIDTH] - zone_length)
+            random_y = random.randint(zone_height, game_config[HEIGHT] - zone_height)
+            new_score_zone.center = (random_x, random_y)
+            
+            if new_score_zone.inflate(zone_length, zone_height).collidelist([game_state[PLAYER_CUBE]] + game_state[SCORE_ZONES]) == -1:
+                is_colliding = False
         
-        new_score_zones.append(new_score_zone)
-    
-    for score_zone in new_score_zones:
-        game_state[SCORE_ZONES].append(score_zone)
+        game_state[SCORE_ZONES].append(new_score_zone)
+        
     
     
     
@@ -640,8 +641,8 @@ def main():
             change_level(game_state, game_config, settings)
             
         if not game_state[IS_MENU]:
-            if len(game_state[SCORE_ZONES]) < game_state[SCORE_ZONES_MAX]:
-                make_more_score_zones(game_state, game_config)
+            while len(game_state[SCORE_ZONES]) < game_state[SCORE_ZONES_MAX]:
+                make_score_zone(game_state, game_config)
             
             add_points_to_score(game_state)
             
