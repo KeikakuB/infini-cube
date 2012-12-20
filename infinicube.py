@@ -672,9 +672,13 @@ def main():
                     game_state[IS_MENU] = False
                     change_level(game_state, game_config, settings)
             
+            #Resets game back to campaign menu
             if not game_state[IS_MENU] and pressed_keys[pygame.K_BACKSPACE]:
-                save_score(game_state, game_state[CAMPAIGN_SETTINGS])
-                play_sound(settings, 'Loss')
+                if not game_config[CHEATS_ENABLED]:
+                    save_score(game_state, game_state[CAMPAIGN_SETTINGS])
+                
+                if not game_config[SKIP_SOUNDS]:
+                    play_sound(settings, 'Loss')
                 
                 game_state[IS_MENU] = True
                 game_state[CURRENT_SCORE] = 0
