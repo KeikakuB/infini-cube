@@ -225,6 +225,7 @@ def change_level(game_state, game_config, settings):
     #Player has beaten all levels in a campaign
     if game_state[CURRENT_LEVEL_INDEX] > len(game_state[LEVELS])-1:
         if not game_config[CHEATS_ENABLED]:
+            play_sound(settings, 'NextRound', repeat=3)
             save_score(game_state, 
                        campaign_settings[game_state[LEVEL_NAME]]['CampaignName'],
                        campaign_settings[game_state[LEVELS][game_state[CURRENT_LEVEL_INDEX]-1]]['CampaignShortName'])
@@ -648,7 +649,7 @@ def main():
                     change_level(game_state, game_config, settings)
             
             #DEBUG: Fast Round Switch
-            if game_config[CHEATS_ENABLED]:
+            if game_config[CHEATS_ENABLED] and not game_state[IS_MENU]:
                 cheats_input(pressed_keys, game_state)
             
             movement_input(pressed_keys, 
