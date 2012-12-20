@@ -1,0 +1,28 @@
+Objective:
+
+Survive as long as possible as White Cube.
+
+Stay within the smallest score zone A for maximum points. 
+
+
+CONTROLS:
+
+Move: Arrow Keys
+
+Select Campaign: SpaceBar or Enter (Return)
+
+Go back to Menu: BackSpace
+
+Quit: Escape
+
+
+Tips and Tricks:
+
+Don't like the difficulty of the default campaigns?
+
+Feel free to make your own or tweak the existing ones.
+
+You can do so by looking at how the default campaigns
+are made in the campaigns folder.
+
+Send your own levels to your friends and have fun!
