@@ -72,6 +72,9 @@ CAMPAIGN_MENU_CHOICES = 'campaign_menu_choices'
 CAMPAIGN_MENU_CHOICES_NAMES = 'campaign_menu_choices_names'
 
 SCORE_ZONES = 'score_zones'
+SCORE_ZONES_MAX = 'score_zones_max'
+SCORE_ZONE_LENGTH = 'score_zone_length'
+SCORE_ZONE_HEIGHT = 'score_zone_height'
 
 LEVELS = 'levels'
 
@@ -121,20 +124,33 @@ def play_sound(settings, sound_name, repeat=1):
     pygame.mixer.music.rewind()
     pygame.mixer.music.play(-1)
 
+def make_more_score_zones(game_state, game_config):
+    zone_height = game_state[SCORE_ZONE_HEIGHT]
+    zone_length = game_state[SCORE_ZONE_LENGTH]
+    
+    new_score_zones = []
+    for _ in range(len(game_state[SCORE_ZONES]), game_state[SCORE_ZONES_MAX] ):
+        new_score_zone = pygame.Rect((0, 0), (zone_length,zone_height))
+        
+        random_x = random.randint(zone_length, game_config[WIDTH] - zone_length)
+        random_y = random.randint(zone_height, game_config[HEIGHT] - zone_height)
+        new_score_zone.center = (random_x, random_y)
+        
+        new_score_zones.append(new_score_zone)
+    
+    for score_zone in new_score_zones:
+        game_state[SCORE_ZONES].append(score_zone)
+    
+    
+    
 def add_points_to_score(game_state):
-    zone_rects = [zone_rect for (_, zone_rect) in game_state[SCORE_ZONES]]
-    zone_index = game_state[PLAYER_CUBE].rect.collidelist(zone_rects)
-    if zone_index != -1:            
-        if zone_index == 0:
-            score_to_add = 7
-        
-        elif zone_index == 1:
-            score_to_add = 3
-            
-        elif zone_index == 2:
-            score_to_add = 1
-        
-        game_state[CURRENT_SCORE] += score_to_add
+    zone_index = game_state[PLAYER_CUBE].rect.collidelist(game_state[SCORE_ZONES])
+    score_to_add = 0
+    if zone_index != -1:
+        score_to_add = 1000
+        del game_state[SCORE_ZONES][zone_index]
+    
+    game_state[CURRENT_SCORE] += score_to_add
         
 def save_score(game_state, campaign_settings):
     """Saves player's score to a .txt file according to the name and
@@ -240,6 +256,11 @@ def change_level(game_state, game_config, settings):
     game_state[PLAYER_CUBE] = PlayerCube()
     
     game_state[PLAYER_CUBE_SPEED] = int(campaign_settings[game_state[LEVEL_NAME]]['GoodCubeSpeed'])
+    
+    game_state[SCORE_ZONES] = []
+    game_state[SCORE_ZONE_LENGTH] = int(campaign_settings[game_state[LEVEL_NAME]]['ScoreZoneLength'])
+    game_state[SCORE_ZONE_HEIGHT] = int(campaign_settings[game_state[LEVEL_NAME]]['ScoreZoneHeight'])
+    game_state[SCORE_ZONES_MAX] = int(campaign_settings[game_state[LEVEL_NAME]]['NumberOfScoreZonesAtSameTime'])
     
     if campaign_settings[game_state[LEVEL_NAME]]['KeepOnScreen'] == '1':
         game_state[SHOULD_KEEP_ON_SCREEN] = True
@@ -427,12 +448,10 @@ def draw_campaign_choices(screen, game_state, game_config):
         vertical_offset += menu_surface.get_height() + 10
 
 
-def draw_score_zone_areas(screen, score_zones, font):
+def draw_score_zone_areas(screen, score_zones_rects, font):
     """Draws score_zones areas onto screen."""
-    for (zone_name, zone_rect) in score_zones:
+    for zone_rect in score_zones_rects:
         pygame.draw.rect(screen, GRAY, zone_rect, 1)
-        zone_name_display = font.render(zone_name, True, GRAY)
-        screen.blit(zone_name_display, zone_rect.bottomleft)
 
 def move_cubes(screen, player_cube, bad_cubes, should_keep_on_screen, bad_cube_counts):
     """
@@ -605,23 +624,6 @@ def main():
     game_state[CURRENT_LIVES] = game_state[MAX_LIVES]
     
     
-    # Build score zones
-    score_zone_A = pygame.Rect((0, 0), (int(game_config[WIDTH] // 4 * 1.5),
-                                         int(game_config[HEIGHT] // 4 * 1.5)))
-    
-    score_zone_B = pygame.Rect((0, 0), (int(game_config[WIDTH] // 2 * 1.5),
-                                         int(game_config[HEIGHT] // 2 * 1.5)))
-    
-    score_zone_C = pygame.Rect((0, 0), (game_config[WIDTH],
-                                        game_config[HEIGHT]))
-    
-    game_state[SCORE_ZONES] = [('A', score_zone_A), ('B', score_zone_B),
-                                ('C', score_zone_C)]
-    
-    for (_, score_zone) in game_state[SCORE_ZONES]:
-        score_zone.center = (game_config[WIDTH] // 2, game_config[HEIGHT] // 2)
-    
-    
     game_state[CURRENT_SCORE] = 0
     game_state[CURRENT_LEVEL_INDEX] = -1
     game_state[IS_NEW_ROUND] = True
@@ -638,6 +640,9 @@ def main():
             change_level(game_state, game_config, settings)
             
         if not game_state[IS_MENU]:
+            if len(game_state[SCORE_ZONES]) < game_state[SCORE_ZONES_MAX]:
+                make_more_score_zones(game_state, game_config)
+            
             add_points_to_score(game_state)
             
             game_state[FRAME_COUNTER] += 1        
